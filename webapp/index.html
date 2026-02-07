@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
   <div class="app">
     <!-- Sidebar Navigation -->
@@ -17,8 +19,9 @@
           <span class="logo-icon">⚡</span>
           <span class="logo-text">ControlBox</span>
         </div>
+        <button class="btn-close mobile-close-btn" id="mobile-close-btn">×</button>
       </div>
-      
+
       <ul class="nav-menu">
         <li class="nav-item active" data-view="dashboard">
           <span class="nav-icon">📊</span>
@@ -46,8 +49,12 @@
     <!-- Main Content -->
     <main class="main-content">
       <!-- Header -->
+      <!-- Header -->
       <header class="header">
-        <h1 id="page-title">Dashboard</h1>
+        <div class="header-left">
+          <button class="btn btn-icon mobile-menu-btn" id="mobile-menu-btn" title="Menú">☰</button>
+          <h1 id="page-title">Dashboard</h1>
+        </div>
         <div class="header-actions">
           <button class="btn btn-icon" id="refresh-btn" title="Actualizar">🔄</button>
         </div>
@@ -55,7 +62,7 @@
 
       <!-- Views Container -->
       <div class="views-container">
-        
+
         <!-- Dashboard View -->
         <section id="dashboard-view" class="view active">
           <div class="stats-grid">
@@ -96,7 +103,7 @@
                 <canvas id="usage-chart"></canvas>
               </div>
             </div>
-            
+
             <div class="card">
               <h3 class="card-title">Últimos Eventos</h3>
               <div class="events-list" id="recent-events">
@@ -121,7 +128,7 @@
             </select>
             <button class="btn btn-primary" id="apply-filters">Filtrar</button>
           </div>
-          
+
           <div class="table-container">
             <table class="data-table">
               <thead>
@@ -145,7 +152,7 @@
           <div class="section-header">
             <button class="btn btn-primary" id="add-user-btn">+ Nuevo Usuario</button>
           </div>
-          
+
           <div class="cards-grid" id="users-grid">
             <!-- Usuarios dinámicos -->
           </div>
@@ -156,7 +163,7 @@
           <div class="section-header">
             <button class="btn btn-primary" id="add-device-btn">+ Nuevo Dispositivo</button>
           </div>
-          
+
           <div class="cards-grid" id="devices-grid">
             <!-- Dispositivos dinámicos -->
           </div>
@@ -199,4 +206,5 @@
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>
