@@ -47,8 +47,10 @@ class API {
     try {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
+        mode: 'cors',
+        redirect: 'follow',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify({ action, ...data }),
       });
@@ -141,3 +143,4 @@ class API {
 
 // Instancia global
 const api = new API();
+
