@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plataforma IoT de Control de Acceso Eléctrico con RFID">
+    <title>IoT Control de Acceso</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="page active">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="logo">
+                        <span class="logo-icon">⚡</span>
+                        <h1>IoT Control</h1>
+                    </div>
+                    <p class="login-subtitle">Plataforma de Control de Acceso Eléctrico</p>
+                </div>
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="tu@email.com" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span>Ingresar</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                    <p id="login-error" class="error-message hidden"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container" class="hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <button id="menu-toggle" class="menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div class="welcome-text">
+                    <span class="welcome-label">BIENVENIDO</span>
+                    <span id="user-name" class="user-name">Usuario</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span id="user-role" class="user-role-badge">ADMIN</span>
+                <button id="logout-btn" class="btn-icon" title="Cerrar sesión">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Sidebar Navigation (Desktop) -->
+            <nav id="sidebar" class="sidebar">
+                <ul class="nav-list">
+                    <li class="nav-item active" data-page="dashboard">
+                        <span class="nav-icon">🏠</span>
+                        <span class="nav-text">Dashboard</span>
+                    </li>
+                    <li class="nav-item" data-page="users">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-text">Usuarios</span>
+                    </li>
+                    <li class="nav-item" data-page="devices">
+                        <span class="nav-icon">📟</span>
+                        <span class="nav-text">Dispositivos</span>
+                    </li>
+                    <li class="nav-item" data-page="logs">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-text">Logs</span>
+                    </li>
+                    <li class="nav-item" data-page="tokens" id="nav-tokens">
+                        <span class="nav-icon">🎫</span>
+                        <span class="nav-text">Tokens</span>
+                    </li>
+                    <li class="nav-item" data-page="roles" id="nav-roles">
+                        <span class="nav-icon">🔐</span>
+                        <span class="nav-text">Roles</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Dashboard Page -->
+                <section id="page-dashboard" class="page-section active">
+                    <div class="page-header">
+                        <h2>Dashboard</h2>
+                        <span class="page-date" id="current-date"></span>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card stat-green">
+                            <div class="stat-header">
+                                <span class="stat-label">Dispositivos Activos</span>
+                                <span class="stat-icon">📟</span>
+                            </div>
+                            <div class="stat-value" id="stat-devices-active">0</div>
+                            <div class="stat-trend positive">
+                                <span>↑</span> <span id="stat-devices-trend">Online</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-red">
+                            <div class="stat-header">
+                                <span class="stat-label">Dispositivos Offline</span>
+                                <span class="stat-icon">⚠️</span>
+                            </div>
+                            <div class="stat-value" id="stat-devices-offline">0</div>
+                            <div class="stat-trend negative">
+                                <span>!</span> <span>Requieren atención</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-yellow">
+                            <div class="stat-header">
+                                <span class="stat-label">Accesos Hoy</span>
+                                <span class="stat-icon">🔓</span>
+                            </div>
+                            <div class="stat-value" id="stat-access-today">0</div>
+                            <div class="stat-trend">
+                                <span id="stat-access-trend"></span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-blue">
+                            <div class="stat-header">
+                                <span class="stat-label">Tokens Consumidos</span>
+                                <span class="stat-icon">🎟️</span>
+                            </div>
+                            <div class="stat-value" id="stat-tokens-consumed">0</div>
+                            <div class="stat-trend">
+                                <span id="stat-tokens-trend">Hoy</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Events -->
+                    <div class="section-card">
+                        <div class="section-header">
+                            <h3>Últimos Eventos</h3>
+                            <button class="btn btn-link" onclick="App.navigateTo('logs')">Ver Todo</button>
+                        </div>
+                        <div class="events-list" id="recent-events">
+                            <div class="loading-placeholder">Cargando eventos...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Users Page -->
+                <section id="page-users" class="page-section hidden">
+                    <div class="page-header">
+                        <h2>Usuarios</h2>
+                        <button class="btn btn-primary" id="btn-add-user">
+                            <span>+ Nuevo Usuario</span>
+                        </button>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="search-bar">
+                        <input type="text" id="users-search" placeholder="Buscar por nombre o UID...">
+                        <button class="btn-icon">🔍</button>
+                    </div>
+
+                    <!-- Users List -->
+                    <div class="table-container">
+                        <table class="data-table" id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>UID</th>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Tokens</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <tr>
+                                    <td colspan="5" class="loading-placeholder">Cargando usuarios...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Devices Page -->
+                <section id="page-devices" class="page-section hidden">
+                    <div class="page-header">
+                        <h2>Dispositivos</h2>
+                        <button class="btn btn-primary" id="btn-add-device">
+                            <span>+ Nuevo Dispositivo</span>
+                        </button>
+                    </div>
+
+                    <!-- Devices Grid -->
+                    <div class="devices-grid" id="devices-grid">
+                        <div class="loading-placeholder">Cargando dispositivos...</div>
+                    </div>
+                </section>
+
+                <!-- Logs Page -->
+                <section id="page-logs" class="page-section hidden">
+                    <div class="page-header">
+                        <h2>Registro de Eventos</h2>
+                        <button class="btn btn-secondary" id="btn-export-logs">
+                            📥 Exportar CSV
+                        </button>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <label>Desde:</label>
+                            <input type="date" id="filter-date-from">
+                        </div>
+                        <div class="filter-group">
+                            <label>Hasta:</label>
+                            <input type="date" id="filter-date-to">
+                        </div>
+                        <div class="filter-group">
+                            <label>Dispositivo:</label>
+                            <select id="filter-device">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Tipo:</label>
+                            <select id="filter-event-type">
+                                <option value="">Todos</option>
+                                <option value="ACCESS_GRANTED">Acceso Concedido</option>
+                                <option value="ACCESS_DENIED">Acceso Denegado</option>
+                                <option value="ERROR">Error</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="btn-apply-filters">Filtrar</button>
+                    </div>
+
+                    <!-- Logs Table -->
+                    <div class="table-container">
+                        <table class="data-table" id="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha/Hora</th>
+                                    <th>Usuario</th>
+                                    <th>Dispositivo</th>
+                                    <th>Tipo Token</th>
+                                    <th>Evento</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-tbody">
+                                <tr>
+                                    <td colspan="6" class="loading-placeholder">Cargando logs...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Tokens Page (MASTER only) -->
+                <section id="page-tokens" class="page-section hidden">
+                    <div class="page-header">
+                        <h2>Tipos de Token</h2>
+                        <button class="btn btn-primary" id="add-token-type-btn">
+                            <span>+ Nuevo Tipo</span>
+                        </button>
+                    </div>
+
+                    <!-- Token Types List -->
+                    <div class="table-container" id="token-types-list">
+                        <div class="loading-placeholder">Cargando tipos de token...</div>
+                    </div>
+                </section>
+
+                <!-- Roles Page (MASTER only) -->
+                <section id="page-roles" class="page-section hidden">
+                    <div class="page-header">
+                        <h2>Gestión de Roles</h2>
+                        <button class="btn btn-primary" id="btn-add-admin">
+                            <span>+ Nuevo Administrador</span>
+                        </button>
+                    </div>
+
+                    <!-- Admins Table -->
+                    <div class="table-container">
+                        <table class="data-table" id="admins-table">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admins-tbody">
+                                <tr>
+                                    <td colspan="4" class="loading-placeholder">Cargando administradores...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation (Mobile) -->
+        <nav class="bottom-nav">
+            <button class="bottom-nav-item active" data-page="dashboard">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">Home</span>
+            </button>
+            <button class="bottom-nav-item" data-page="users">
+                <span class="nav-icon">👥</span>
+                <span class="nav-text">Usuarios</span>
+            </button>
+            <button class="bottom-nav-item" data-page="devices">
+                <span class="nav-icon">📟</span>
+                <span class="nav-text">Dispositivos</span>
+            </button>
+            <button class="bottom-nav-item" data-page="logs">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">Logs</span>
+            </button>
+            <button class="bottom-nav-item" data-page="tokens" id="bottom-nav-tokens">
+                <span class="nav-icon">🎫</span>
+                <span class="nav-text">Tokens</span>
+            </button>
+            <button class="bottom-nav-item" data-page="roles" id="bottom-nav-roles">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Config</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div id="modal-container" class="modal-container">
+            <!-- Modal content will be injected here -->
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/views/dashboard.js"></script>
+    <script src="js/views/users.js"></script>
+    <script src="js/views/devices.js"></script>
+    <script src="js/views/logs.js"></script>
+    <script src="js/views/roles.js"></script>
+    <script src="js/views/tokens.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
