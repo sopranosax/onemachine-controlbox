@@ -46,6 +46,28 @@ const Houses = {
         return this.devices.filter(d => d.house_id === houseId).length;
     },
 
+    /**
+     * Convert Google Drive sharing URL to direct image URL
+     * Supports: /file/d/FILE_ID/view, /open?id=FILE_ID, /uc?id=FILE_ID
+     */
+    getDriveImageUrl(url) {
+        if (!url) return '';
+        let fileId = '';
+        // Match /file/d/FILE_ID/
+        const match1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match1) fileId = match1[1];
+        // Match ?id=FILE_ID
+        if (!fileId) {
+            const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (match2) fileId = match2[1];
+        }
+        if (fileId) {
+            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+        }
+        // Not a Drive URL, return as-is
+        return url;
+    },
+
     renderHouses() {
         const tbody = document.getElementById('houses-tbody');
 
@@ -67,9 +89,9 @@ const Houses = {
         tbody.innerHTML = this.houses.map(h => {
             const address = [h.house_street, h.house_number, h.house_extra].filter(Boolean).join(' ');
             const devCount = this.getDeviceCountForHouse(h.house_id);
-            const imgSrc = h.house_img || '';
+            const imgSrc = this.getDriveImageUrl(h.house_img || '');
             const imgHtml = imgSrc
-                ? `<img src="${imgSrc}" alt="${h.house_id}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">`
+                ? `<img src="${imgSrc}" alt="${h.house_id}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;" onerror="this.outerHTML='<span style=font-size:1.5rem>🏠</span>'">`
                 : '<span style="font-size:1.5rem;">🏠</span>';
 
             return `
