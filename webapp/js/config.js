@@ -5,7 +5,7 @@
 const Config = {
     // Google Apps Script Web App URL
     // Replace with your deployed Apps Script Web App URL
-    API_BASE_URL: 'https://script.google.com/macros/s/AKfycbyWH-LA4xIWvUaOWue9GHTbzkb5Ps-0mt0Weq9RbWGp7rlv7KGNDfG-QcCddhy8hfUiLw/exec',
+    API_BASE_URL: 'https://script.google.com/macros/s/AKfycbzTzbraWuOCZTQHPMYlvGaXxTp58QLt8XMrqXtekMeqm_sFBH6wM_GhS-6GiVYxGv4Lxw/exec',
 
     // Roles
     ROLES: {
@@ -53,3 +53,4 @@ Object.freeze(Config.STATUS);
 Object.freeze(Config.EVENT_TYPES);
 Object.freeze(Config.UI);
 Object.freeze(Config.STORAGE_KEYS);
+
