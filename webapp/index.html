@@ -245,6 +245,38 @@
                         </button>
                     </div>
 
+                    <!-- Filters -->
+                    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="devices-filter-house" style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Casa:</label>
+                            <select id="devices-filter-house" class="form-select" style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="devices-filter-type" style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Tipo:</label>
+                            <select id="devices-filter-type" class="form-select" style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="devices-filter-status" style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Estado:</label>
+                            <select id="devices-filter-status" class="form-select" style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
+                                <option value="">Todos</option>
+                                <option value="ACTIVO">ACTIVO</option>
+                                <option value="INACTIVO">INACTIVO</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="devices-filter-connection" style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Conexión:</label>
+                            <select id="devices-filter-connection" class="form-select" style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
+                                <option value="">Todas</option>
+                                <option value="ONLINE">ONLINE</option>
+                                <option value="OFFLINE">OFFLINE</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Devices Table -->
                     <div class="table-container">
                         <table class="data-table" id="devices-table">

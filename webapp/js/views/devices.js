@@ -36,6 +36,15 @@ const Devices = {
             addBtn.onclick = () => this.showAddDeviceModal();
             addBtn.style.display = Auth.can('devices.create') ? '' : 'none';
         }
+
+        // Filters
+        const filters = ['devices-filter-house', 'devices-filter-type', 'devices-filter-status', 'devices-filter-connection'];
+        filters.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.onchange = () => this.renderDevices();
+            }
+        });
     },
 
     /**
@@ -45,6 +54,16 @@ const Devices = {
         try {
             const response = await API.getTokenTypes();
             this.tokenTypes = response.token_types || [];
+            
+            // Populate filter
+            const filter = document.getElementById('devices-filter-type');
+            if (filter) {
+                const currentVal = filter.value;
+                const sorted = [...this.tokenTypes].sort((a, b) => a.token_type.localeCompare(b.token_type));
+                filter.innerHTML = '<option value="">Todos</option>' + 
+                    sorted.map(t => `<option value="${t.token_type}">${t.token_type}</option>`).join('');
+                filter.value = currentVal; // Restore selection if reloaded
+            }
         } catch (error) {
             this.tokenTypes = [];
         }
@@ -57,6 +76,16 @@ const Devices = {
         try {
             const response = await API.getHouses();
             this.houses = response.houses || [];
+
+            // Populate filter
+            const filter = document.getElementById('devices-filter-house');
+            if (filter) {
+                const currentVal = filter.value;
+                const sorted = [...this.houses].sort((a, b) => a.house_id.localeCompare(b.house_id));
+                filter.innerHTML = '<option value="">Todas</option>' + 
+                    sorted.map(h => `<option value="${Utils.escapeHtml(h.house_id)}">${Utils.escapeHtml(h.house_id)}</option>`).join('');
+                filter.value = currentVal;
+            }
         } catch (error) {
             this.houses = [];
         }
@@ -138,14 +167,39 @@ const Devices = {
         const tbody = document.getElementById('devices-tbody');
         if (!tbody) return;
 
-        if (!this.devices || this.devices.length === 0) {
+        // Apply filters
+        const filterHouse = document.getElementById('devices-filter-house')?.value;
+        const filterType = document.getElementById('devices-filter-type')?.value;
+        const filterStatus = document.getElementById('devices-filter-status')?.value;
+        const filterConnection = document.getElementById('devices-filter-connection')?.value;
+
+        let filteredDevices = this.devices;
+
+        if (filterHouse) {
+            filteredDevices = filteredDevices.filter(d => d.house_id === filterHouse);
+        }
+        if (filterType) {
+            filteredDevices = filteredDevices.filter(d => d.token_type === filterType);
+        }
+        if (filterStatus) {
+            const isActive = filterStatus === 'ACTIVO';
+            filteredDevices = filteredDevices.filter(d => d.active === isActive);
+        }
+        if (filterConnection) {
+            filteredDevices = filteredDevices.filter(d => {
+                const isOnline = Utils.isDeviceOnline(d.last_seen);
+                return filterConnection === 'ONLINE' ? isOnline : !isOnline;
+            });
+        }
+
+        if (!filteredDevices || filteredDevices.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7">
                         <div class="empty-state">
                             <div class="empty-state-icon">📟</div>
                             <p class="empty-state-title">No hay dispositivos</p>
-                            <p class="empty-state-message">Agregue un nuevo dispositivo para comenzar</p>
+                            <p class="empty-state-message">No se encontraron dispositivos con los filtros seleccionados</p>
                         </div>
                     </td>
                 </tr>
@@ -155,7 +209,7 @@ const Devices = {
 
         const isMaster = Auth.isMaster();
 
-        tbody.innerHTML = this.devices.map(device => {
+        tbody.innerHTML = filteredDevices.map(device => {
             const isOnline = Utils.isDeviceOnline(device.last_seen);
             const statusClass = isOnline ? 'online' : 'offline';
             const statusText = isOnline ? 'Online' : 'Offline';
