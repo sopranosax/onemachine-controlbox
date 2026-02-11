@@ -58,7 +58,7 @@ const Houses = {
                 allHouses = allHouses.filter(h => myHouseIds.includes(h.house_id));
             }
 
-            this.houses = allHouses;
+            this.houses = allHouses.sort((a, b) => a.house_id.localeCompare(b.house_id));
             this.renderHouses();
         } catch (error) {
             console.error('Error loading houses:', error);
