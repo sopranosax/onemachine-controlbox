@@ -7,6 +7,7 @@ const Users = {
     users: [],
     tokenTypes: [],
     houses: [],           // All available houses
+    devices: [],          // All devices (for token type filtering)
     userHouses: [],       // All user-house assignments [{uid, house_id}]
     searchTerm: '',
 
@@ -51,14 +52,16 @@ const Users = {
      */
     async loadUsers() {
         try {
-            const [usersRes, housesRes, uhRes] = await Promise.all([
+            const [usersRes, housesRes, uhRes, devicesRes] = await Promise.all([
                 API.getUsers(),
                 API.getHouses(),
-                API.getAllUserHouses()
+                API.getAllUserHouses(),
+                API.getDevices()
             ]);
             this.users = usersRes.users || [];
             this.houses = housesRes.houses || [];
             this.userHouses = uhRes.assignments || [];
+            this.devices = devicesRes.devices || [];
             this.renderUsers(this.getFilteredUsers());
         } catch (error) {
             console.error('Error loading users:', error);
@@ -430,21 +433,47 @@ const Users = {
     },
 
     /**
-     * Adjust tokens modal
+     * Get the relevant token types for a user based on their type and house access.
+     * GLOBAL: token_types from ALL active devices
+     * HOUSE:  token_types from active devices in assigned houses only
+     */
+    getRelevantTokenTypes(uid, userType) {
+        const activeDevices = this.devices.filter(d => {
+            const isActive = d.active === true || d.active === 'TRUE' || d.active === 'true' || d.active === 1;
+            return isActive;
+        });
+
+        let relevantDevices;
+        if (userType === 'GLOBAL') {
+            relevantDevices = activeDevices;
+        } else {
+            const userHouseIds = this.getHousesForUser(uid);
+            relevantDevices = activeDevices.filter(d => d.house_id && userHouseIds.includes(d.house_id));
+        }
+
+        // Unique token types from relevant devices
+        const tokenTypeSet = new Set(relevantDevices.map(d => d.token_type).filter(Boolean));
+        return [...tokenTypeSet];
+    },
+
+    /**
+     * Adjust tokens modal — shows only token types from devices the user can access
      */
     adjustTokens(uid) {
         const user = this.users.find(u => u.uid === uid);
         if (!user) return;
 
-        const existingTokenTypes = this.tokenTypes.map(t => t.token_type);
+        const userType = user.user_type || 'GLOBAL';
+        const relevantTypes = this.getRelevantTokenTypes(uid, userType);
 
-        const tokenRows = Object.entries(user.tokens || {})
-            .filter(([type, balance]) => existingTokenTypes.includes(type))
-            .map(([type, balance]) => {
-                const tokenType = this.tokenTypes.find(t => t.token_type === type);
-                const isInactive = tokenType && tokenType.status === 'INACTIVO';
-                const inactiveTag = isInactive ? ' <span class="token-inactive" style="font-size:0.75rem;">⚠️ INACTIVO</span>' : '';
-                return `
+        // Build token rows for relevant types only
+        const userTokens = user.tokens || {};
+        const tokenRows = relevantTypes.map(type => {
+            const balance = userTokens[type] || 0;
+            const tokenType = this.tokenTypes.find(t => t.token_type === type);
+            const isInactive = tokenType && tokenType.status === 'INACTIVO';
+            const inactiveTag = isInactive ? ' <span class="token-inactive" style="font-size:0.75rem;">⚠️ INACTIVO</span>' : '';
+            return `
                 <div class="adjust-token-row" style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-color, #e2e8f0);">
                     <div style="flex:1;"><strong>${type}</strong>${inactiveTag}</div>
                     <div style="display:flex;align-items:center;gap:8px;">
@@ -457,12 +486,20 @@ const Users = {
                     </div>
                 </div>
             `;
-            }).join('') || '<p class="text-muted">Sin tokens para ajustar</p>';
+        }).join('') || '<p class="text-muted">No hay tokens relevantes para este usuario</p>';
+
+        // Info label
+        const scopeLabel = userType === 'GLOBAL'
+            ? '🌐 Mostrando tokens de todos los dispositivos activos'
+            : `🏠 Mostrando tokens de dispositivos en ${this.getHousesForUser(uid).length} casa(s) asignada(s)`;
 
         Utils.showModal({
             title: `Ajustar Tokens: ${user.user_name}`,
             content: `
                 <form id="adjust-tokens-form">
+                    <div style="margin-bottom:12px;padding:8px 12px;background:var(--bg-secondary, #f1f5f9);border-radius:8px;font-size:0.85rem;color:var(--text-secondary);">
+                        ${scopeLabel}
+                    </div>
                     <div style="margin-bottom:16px;">
                         ${tokenRows}
                     </div>
@@ -477,15 +514,14 @@ const Users = {
         document.getElementById('adjust-tokens-form').onsubmit = async (e) => {
             e.preventDefault();
             const updates = [];
-            const existingTypes = this.tokenTypes.map(t => t.token_type);
 
-            for (const [type, balance] of Object.entries(user.tokens || {})) {
-                if (!existingTypes.includes(type)) continue;
+            for (const type of relevantTypes) {
                 const input = document.getElementById(`token-adjust-${type}`);
                 if (input) {
                     const newBalance = parseInt(input.value);
-                    if (newBalance !== balance) {
-                        updates.push({ token_type: type, delta: newBalance - balance });
+                    const oldBalance = (user.tokens || {})[type] || 0;
+                    if (newBalance !== oldBalance) {
+                        updates.push({ token_type: type, delta: newBalance - oldBalance });
                     }
                 }
             }
