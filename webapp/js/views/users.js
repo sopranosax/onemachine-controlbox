@@ -533,7 +533,7 @@ const Users = {
 
             try {
                 for (const update of updates) {
-                    await API.updateTokenBalance({ uid, token_type: update.token_type, delta: update.delta });
+                    await API.updateTokenBalance(uid, update.token_type, update.delta);
                 }
                 Utils.closeModal();
                 Utils.showToast('Tokens actualizados', 'success');
