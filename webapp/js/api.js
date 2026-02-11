@@ -193,6 +193,20 @@ const API = {
         return this.post('assignHouseAdmin', { house_id: houseId, admin_email: adminEmail });
     },
 
+    // ==================== USER HOUSES ====================
+
+    async getUserHouses(uid) {
+        return this.get('getUserHouses', { uid });
+    },
+
+    async getAllUserHouses() {
+        return this.get('getAllUserHouses');
+    },
+
+    async assignUserHouses(uid, houseIds) {
+        return this.post('assignUserHouses', { uid, house_ids: houseIds });
+    },
+
     // ==================== MASTERKEYS ====================
 
     async getMasterkeys() {

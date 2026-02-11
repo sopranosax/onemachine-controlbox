@@ -1,49 +1,36 @@
 /**
  * Users View for IoT Control WebApp
+ * Now supports USER_TYPE (GLOBAL / HOUSE) and house assignments
  */
 
 const Users = {
     users: [],
     tokenTypes: [],
+    houses: [],           // All available houses
+    userHouses: [],       // All user-house assignments [{uid, house_id}]
     searchTerm: '',
 
-    /**
-     * Load users page
-     */
     async load() {
-        this.bindEvents();
-        this.renderLoadingState();
-
-        try {
-            // Load token types first
-            await this.loadTokenTypes();
-
-            // Load users
-            await this.loadUsers();
-        } catch (error) {
-            console.error('Error loading users:', error);
-            Utils.showToast('Error al cargar usuarios', 'error');
+        if (!Auth.can('users.view')) {
+            Utils.showToast('No tiene permisos para ver esta sección', 'error');
+            return;
         }
+
+        this.renderLoadingState();
+        await this.loadTokenTypes();
+        await this.loadUsers();
+        this.bindEvents();
     },
 
-    /**
-     * Bind event handlers
-     */
     bindEvents() {
-        // Search input
         const searchInput = document.getElementById('users-search');
         if (searchInput) {
-            searchInput.removeEventListener('input', this.handleSearchBound);
-            this.handleSearchBound = Utils.debounce((e) => this.handleSearch(e.target.value), 300);
-            searchInput.addEventListener('input', this.handleSearchBound);
+            searchInput.oninput = (e) => this.handleSearch(e.target.value);
         }
 
-        // Add user button
         const addBtn = document.getElementById('btn-add-user');
         if (addBtn) {
             addBtn.onclick = () => this.showAddUserModal();
-            // Hide if no permission
-            addBtn.style.display = Auth.can('users.create') ? '' : 'none';
         }
     },
 
@@ -55,30 +42,28 @@ const Users = {
             const response = await API.getTokenTypes();
             this.tokenTypes = response.token_types || [];
         } catch (error) {
-            // Mock data
-            this.tokenTypes = [
-                { token_type: 'WSH', token_name: 'Lavadora' },
-                { token_type: 'DRY', token_name: 'Secadora' }
-            ];
+            console.error('Error loading token types:', error);
         }
     },
 
     /**
-     * Load users
+     * Load users + houses + user-house assignments
      */
     async loadUsers() {
         try {
-            const response = await API.getUsers();
-            this.users = response.users || [];
-            this.renderUsers(this.users);
+            const [usersRes, housesRes, uhRes] = await Promise.all([
+                API.getUsers(),
+                API.getHouses(),
+                API.getAllUserHouses()
+            ]);
+            this.users = usersRes.users || [];
+            this.houses = housesRes.houses || [];
+            this.userHouses = uhRes.assignments || [];
+            this.renderUsers(this.getFilteredUsers());
         } catch (error) {
-            // Mock data
-            this.users = [
-                { uid: 'ABC12345', user_name: 'Juan Pérez', status: 'ACTIVO', created_at: '2026-01-15', tokens: { WSH: 5, DRY: 3 } },
-                { uid: 'DEF67890', user_name: 'María García', status: 'ACTIVO', created_at: '2026-01-20', tokens: { WSH: 0, DRY: 10 } },
-                { uid: 'GHI11111', user_name: 'Carlos López', status: 'INACTIVO', created_at: '2026-02-01', tokens: { WSH: 2, DRY: 0 } }
-            ];
-            this.renderUsers(this.users);
+            console.error('Error loading users:', error);
+            this.users = [];
+            this.renderUsers([]);
         }
     },
 
@@ -86,9 +71,10 @@ const Users = {
      * Render loading state
      */
     renderLoadingState() {
-        document.getElementById('users-tbody').innerHTML = `
-            <tr><td colspan="5" class="loading-placeholder">Cargando usuarios...</td></tr>
-        `;
+        const tbody = document.getElementById('users-tbody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">Cargando usuarios...</td></tr>';
+        }
     },
 
     /**
@@ -96,11 +82,22 @@ const Users = {
      */
     handleSearch(term) {
         this.searchTerm = term.toLowerCase();
-        const filtered = this.users.filter(user =>
+        this.renderUsers(this.getFilteredUsers());
+    },
+
+    getFilteredUsers() {
+        if (!this.searchTerm) return this.users;
+        return this.users.filter(user =>
             user.user_name.toLowerCase().includes(this.searchTerm) ||
             user.uid.toLowerCase().includes(this.searchTerm)
         );
-        this.renderUsers(filtered);
+    },
+
+    /**
+     * Get house IDs assigned to a user
+     */
+    getHousesForUser(uid) {
+        return this.userHouses.filter(a => a.uid === uid).map(a => a.house_id);
     },
 
     /**
@@ -112,7 +109,7 @@ const Users = {
         if (!users || users.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5">
+                    <td colspan="6">
                         <div class="empty-state">
                             <div class="empty-state-icon">👥</div>
                             <p class="empty-state-title">No se encontraron usuarios</p>
@@ -133,6 +130,13 @@ const Users = {
 
         tbody.innerHTML = users.map(user => {
             const statusClass = user.status === 'ACTIVO' ? 'badge-success' : 'badge-danger';
+            const userType = user.user_type || 'GLOBAL';
+            const typeBadgeClass = userType === 'GLOBAL' ? 'status-active' : 'status-info';
+            const userHouseIds = this.getHousesForUser(user.uid);
+            const typeLabel = userType === 'GLOBAL'
+                ? '🌐 GLOBAL'
+                : `🏠 HOUSE (${userHouseIds.length})`;
+
             const tokens = user.tokens || {};
             // Filter to only show existing token types
             const tokenDisplay = Object.entries(tokens)
@@ -152,6 +156,7 @@ const Users = {
                     <td><code>${Utils.escapeHtml(user.uid)}</code></td>
                     <td>${Utils.escapeHtml(user.user_name)}</td>
                     <td><span class="badge ${statusClass}">${user.status}</span></td>
+                    <td><span class="status-badge ${typeBadgeClass}" style="font-size:0.8rem;">${typeLabel}</span></td>
                     <td>${tokenDisplay}</td>
                     <td>
                         <div class="action-buttons">
@@ -174,8 +179,9 @@ const Users = {
         if (!user) return;
 
         const tokens = user.tokens || {};
-        // Get list of existing token types
         const existingTokenTypes = this.tokenTypes.map(t => t.token_type);
+        const userType = user.user_type || 'GLOBAL';
+        const userHouseIds = this.getHousesForUser(uid);
 
         const tokenCards = Object.entries(tokens)
             .filter(([type, balance]) => existingTokenTypes.includes(type))
@@ -191,6 +197,25 @@ const Users = {
                 </div>
             `;
             }).join('') || '<p class="text-muted">Sin tokens asignados</p>';
+
+        // Build houses info for HOUSE-type users
+        let housesSection = '';
+        if (userType !== 'GLOBAL') {
+            const housesList = userHouseIds.length > 0
+                ? userHouseIds.map(hId => {
+                    const h = this.houses.find(x => x.house_id === hId);
+                    const addr = h ? [h.house_street, h.house_number].filter(Boolean).join(' ') : '';
+                    return `<span class="status-badge status-active" style="font-size:0.85rem;margin:2px;">🏠 ${Utils.escapeHtml(hId)}${addr ? ` — ${Utils.escapeHtml(addr)}` : ''}</span>`;
+                }).join(' ')
+                : '<span style="color:var(--text-secondary);">Sin casas asignadas</span>';
+
+            housesSection = `
+                <div class="section-card">
+                    <h4>Casas Asignadas</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;">${housesList}</div>
+                </div>
+            `;
+        }
 
         Utils.showModal({
             title: 'Detalle de Usuario',
@@ -208,6 +233,15 @@ const Users = {
                         <h4>Estado</h4>
                         <span class="badge ${user.status === 'ACTIVO' ? 'badge-success' : 'badge-danger'}">${user.status}</span>
                     </div>
+
+                    <div class="section-card">
+                        <h4>Tipo de Usuario</h4>
+                        <span class="status-badge ${userType === 'GLOBAL' ? 'status-active' : 'status-info'}" style="font-size:0.9rem;">
+                            ${userType === 'GLOBAL' ? '🌐 GLOBAL — Acceso a todas las casas' : '🏠 HOUSE — Acceso restringido'}
+                        </span>
+                    </div>
+
+                    ${housesSection}
                     
                     <div class="section-card">
                         <h4>Tokens Disponibles</h4>
@@ -225,9 +259,31 @@ const Users = {
     },
 
     /**
+     * Build house checkboxes HTML
+     */
+    buildHouseCheckboxes(containerId, selectedHouseIds = []) {
+        if (this.houses.length === 0) {
+            return '<p style="color:var(--text-secondary);font-size:0.85rem;">No hay casas disponibles</p>';
+        }
+        return this.houses.map(h => {
+            const checked = selectedHouseIds.includes(h.house_id) ? 'checked' : '';
+            const addr = [h.house_street, h.house_number].filter(Boolean).join(' ');
+            return `
+                <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:0.9rem;cursor:pointer;">
+                    <input type="checkbox" class="user-house-cb" value="${Utils.escapeHtml(h.house_id)}" ${checked}>
+                    <strong>${Utils.escapeHtml(h.house_id)}</strong>
+                    ${addr ? `<span style="color:var(--text-secondary);">— ${Utils.escapeHtml(addr)}</span>` : ''}
+                </label>
+            `;
+        }).join('');
+    },
+
+    /**
      * Show add user modal
      */
     showAddUserModal() {
+        const houseCbs = this.buildHouseCheckboxes('new-user-houses');
+
         Utils.showModal({
             title: 'Nuevo Usuario',
             content: `
@@ -239,6 +295,19 @@ const Users = {
                     <div class="form-group">
                         <label for="new-user-name">Nombre del Usuario *</label>
                         <input type="text" id="new-user-name" required placeholder="Nombre completo">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-user-type">Tipo de Usuario</label>
+                        <select id="new-user-type" class="form-select" onchange="Users.toggleHouseSelector('new')">
+                            <option value="GLOBAL">🌐 GLOBAL — Acceso a todas las casas</option>
+                            <option value="HOUSE">🏠 HOUSE — Solo casas asignadas</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="new-user-houses-container" style="display:none;">
+                        <label>Casas Asignadas</label>
+                        <div id="new-user-houses" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-color, #e2e8f0);border-radius:8px;padding:8px 12px;">
+                            ${houseCbs}
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
@@ -252,14 +321,23 @@ const Users = {
             e.preventDefault();
             const uid = document.getElementById('new-user-uid').value.trim();
             const name = document.getElementById('new-user-name').value.trim();
+            const userType = document.getElementById('new-user-type').value;
 
             if (!uid || !name) {
                 Utils.showToast('Complete todos los campos', 'error');
                 return;
             }
 
+            // Get selected houses if HOUSE type
+            const selectedHouses = userType === 'HOUSE'
+                ? [...document.querySelectorAll('#new-user-houses .user-house-cb:checked')].map(cb => cb.value)
+                : [];
+
             try {
-                await API.createUser({ uid, user_name: name, status: 'ACTIVO' });
+                await API.createUser({ uid, user_name: name, status: 'ACTIVO', user_type: userType });
+                if (userType === 'HOUSE' && selectedHouses.length > 0) {
+                    await API.assignUserHouses(uid, selectedHouses);
+                }
                 Utils.closeModal();
                 Utils.showToast('Usuario creado correctamente', 'success');
                 this.load();
@@ -270,11 +348,26 @@ const Users = {
     },
 
     /**
+     * Toggle house selector visibility in modals
+     */
+    toggleHouseSelector(prefix) {
+        const typeSelect = document.getElementById(`${prefix}-user-type`);
+        const container = document.getElementById(`${prefix}-user-houses-container`);
+        if (typeSelect && container) {
+            container.style.display = typeSelect.value === 'HOUSE' ? '' : 'none';
+        }
+    },
+
+    /**
      * Edit user
      */
     editUser(uid) {
         const user = this.users.find(u => u.uid === uid);
         if (!user) return;
+
+        const userType = user.user_type || 'GLOBAL';
+        const userHouseIds = this.getHousesForUser(uid);
+        const houseCbs = this.buildHouseCheckboxes('edit-user-houses', userHouseIds);
 
         Utils.showModal({
             title: 'Editar Usuario',
@@ -288,6 +381,19 @@ const Users = {
                         <label for="edit-user-name">Nombre del Usuario *</label>
                         <input type="text" id="edit-user-name" value="${Utils.escapeHtml(user.user_name)}" required>
                     </div>
+                    <div class="form-group">
+                        <label for="edit-user-type">Tipo de Usuario</label>
+                        <select id="edit-user-type" class="form-select" onchange="Users.toggleHouseSelector('edit')">
+                            <option value="GLOBAL" ${userType === 'GLOBAL' ? 'selected' : ''}>🌐 GLOBAL — Acceso a todas las casas</option>
+                            <option value="HOUSE" ${userType === 'HOUSE' ? 'selected' : ''}>🏠 HOUSE — Solo casas asignadas</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="edit-user-houses-container" style="display:${userType === 'HOUSE' ? '' : 'none'};">
+                        <label>Casas Asignadas</label>
+                        <div id="edit-user-houses" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-color, #e2e8f0);border-radius:8px;padding:8px 12px;">
+                            ${houseCbs}
+                        </div>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -299,14 +405,21 @@ const Users = {
         document.getElementById('edit-user-form').onsubmit = async (e) => {
             e.preventDefault();
             const name = document.getElementById('edit-user-name').value.trim();
+            const newType = document.getElementById('edit-user-type').value;
 
             if (!name) {
                 Utils.showToast('El nombre es requerido', 'error');
                 return;
             }
 
+            // Get selected houses if HOUSE type
+            const selectedHouses = newType === 'HOUSE'
+                ? [...document.querySelectorAll('#edit-user-houses .user-house-cb:checked')].map(cb => cb.value)
+                : [];
+
             try {
-                await API.updateUser(uid, { user_name: name });
+                await API.updateUser(uid, { user_name: name, user_type: newType });
+                await API.assignUserHouses(uid, selectedHouses);
                 Utils.closeModal();
                 Utils.showToast('Usuario actualizado', 'success');
                 this.load();
@@ -323,31 +436,36 @@ const Users = {
         const user = this.users.find(u => u.uid === uid);
         if (!user) return;
 
-        const tokens = user.tokens || {};
-        const adjustments = {};
+        const existingTokenTypes = this.tokenTypes.map(t => t.token_type);
 
-        const tokenInputs = this.tokenTypes.map(tt => {
-            const currentBalance = tokens[tt.token_type] || 0;
-            adjustments[tt.token_type] = 0;
-
-            return `
-                <div class="token-card">
-                    <div class="token-type-label">${tt.token_type} - ${tt.token_name}</div>
-                    <div class="token-balance" id="balance-${tt.token_type}">${currentBalance}</div>
-                    <div class="token-controls">
-                        <button type="button" class="token-btn minus" onclick="Users.adjustTokenValue('${tt.token_type}', -1, ${currentBalance})">−</button>
-                        <input type="number" class="token-input" id="adjust-${tt.token_type}" value="0" onchange="Users.updatePreview('${tt.token_type}', ${currentBalance})">
-                        <button type="button" class="token-btn plus" onclick="Users.adjustTokenValue('${tt.token_type}', 1, ${currentBalance})">+</button>
+        const tokenRows = Object.entries(user.tokens || {})
+            .filter(([type, balance]) => existingTokenTypes.includes(type))
+            .map(([type, balance]) => {
+                const tokenType = this.tokenTypes.find(t => t.token_type === type);
+                const isInactive = tokenType && tokenType.status === 'INACTIVO';
+                const inactiveTag = isInactive ? ' <span class="token-inactive" style="font-size:0.75rem;">⚠️ INACTIVO</span>' : '';
+                return `
+                <div class="adjust-token-row" style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-color, #e2e8f0);">
+                    <div style="flex:1;"><strong>${type}</strong>${inactiveTag}</div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="Users.adjustTokenValue('${type}', -1, ${balance})">−</button>
+                        <input type="number" id="token-adjust-${type}" value="${balance}" min="0" style="width:70px;text-align:center;">
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="Users.adjustTokenValue('${type}', 1, ${balance})">+</button>
+                    </div>
+                    <div id="token-preview-${type}" style="font-size:0.85rem;color:var(--text-secondary);min-width:80px;text-align:right;">
+                        Actual: ${balance}
                     </div>
                 </div>
             `;
-        }).join('');
+            }).join('') || '<p class="text-muted">Sin tokens para ajustar</p>';
 
         Utils.showModal({
-            title: `Ajustar Tokens - ${user.user_name}`,
+            title: `Ajustar Tokens: ${user.user_name}`,
             content: `
                 <form id="adjust-tokens-form">
-                    <div class="tokens-grid">${tokenInputs}</div>
+                    <div style="margin-bottom:16px;">
+                        ${tokenRows}
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -356,21 +474,33 @@ const Users = {
             `
         });
 
-        // Store for later use
-        this.currentAdjustUser = user;
-
         document.getElementById('adjust-tokens-form').onsubmit = async (e) => {
             e.preventDefault();
+            const updates = [];
+            const existingTypes = this.tokenTypes.map(t => t.token_type);
 
-            try {
-                for (const tt of this.tokenTypes) {
-                    const delta = parseInt(document.getElementById(`adjust-${tt.token_type}`).value) || 0;
-                    if (delta !== 0) {
-                        await API.updateTokenBalance(uid, tt.token_type, delta);
+            for (const [type, balance] of Object.entries(user.tokens || {})) {
+                if (!existingTypes.includes(type)) continue;
+                const input = document.getElementById(`token-adjust-${type}`);
+                if (input) {
+                    const newBalance = parseInt(input.value);
+                    if (newBalance !== balance) {
+                        updates.push({ token_type: type, delta: newBalance - balance });
                     }
                 }
+            }
+
+            if (updates.length === 0) {
+                Utils.showToast('No hay cambios', 'info');
+                return;
+            }
+
+            try {
+                for (const update of updates) {
+                    await API.updateTokenBalance({ uid, token_type: update.token_type, delta: update.delta });
+                }
                 Utils.closeModal();
-                Utils.showToast('Tokens actualizados correctamente', 'success');
+                Utils.showToast('Tokens actualizados', 'success');
                 this.load();
             } catch (error) {
                 Utils.showToast('Error al actualizar tokens', 'error');
@@ -382,33 +512,28 @@ const Users = {
      * Adjust token value in modal
      */
     adjustTokenValue(tokenType, delta, originalBalance) {
-        const input = document.getElementById(`adjust-${tokenType}`);
-        const currentDelta = parseInt(input.value) || 0;
-        const newDelta = currentDelta + delta;
-
-        // Don't allow negative final balance
-        if (originalBalance + newDelta < 0) {
-            Utils.showToast('El balance no puede ser negativo', 'warning');
-            return;
+        const input = document.getElementById(`token-adjust-${tokenType}`);
+        if (input) {
+            const current = parseInt(input.value) || 0;
+            const newVal = Math.max(0, current + delta);
+            input.value = newVal;
+            this.updatePreview(tokenType, originalBalance);
         }
-
-        input.value = newDelta;
-        this.updatePreview(tokenType, originalBalance);
     },
 
     /**
      * Update balance preview
      */
     updatePreview(tokenType, originalBalance) {
-        const input = document.getElementById(`adjust-${tokenType}`);
-        const delta = parseInt(input.value) || 0;
-        const newBalance = originalBalance + delta;
-
-        if (newBalance < 0) {
-            input.value = -originalBalance;
-            document.getElementById(`balance-${tokenType}`).textContent = 0;
-        } else {
-            document.getElementById(`balance-${tokenType}`).textContent = newBalance;
+        const input = document.getElementById(`token-adjust-${tokenType}`);
+        const preview = document.getElementById(`token-preview-${tokenType}`);
+        if (input && preview) {
+            const newVal = parseInt(input.value) || 0;
+            const diff = newVal - originalBalance;
+            let diffText = '';
+            if (diff > 0) diffText = `<span style="color:var(--color-success, green);">(+${diff})</span>`;
+            else if (diff < 0) diffText = `<span style="color:var(--color-danger, red);">(${diff})</span>`;
+            preview.innerHTML = `Actual: ${originalBalance} ${diffText}`;
         }
     },
 
@@ -422,21 +547,14 @@ const Users = {
         const newStatus = user.status === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
         const action = user.status === 'ACTIVO' ? 'desactivar' : 'activar';
 
-        const confirmed = await Utils.showConfirm({
-            title: `${action.charAt(0).toUpperCase() + action.slice(1)} Usuario`,
-            message: `¿Está seguro que desea ${action} a ${user.user_name}?`,
-            confirmText: action.charAt(0).toUpperCase() + action.slice(1),
-            type: user.status === 'ACTIVO' ? 'danger' : 'info'
-        });
+        if (!confirm(`¿Desea ${action} al usuario ${user.user_name}?`)) return;
 
-        if (confirmed) {
-            try {
-                await API.updateUser(uid, { status: newStatus });
-                Utils.showToast(`Usuario ${newStatus === 'ACTIVO' ? 'activado' : 'desactivado'}`, 'success');
-                this.load();
-            } catch (error) {
-                Utils.showToast('Error al actualizar estado', 'error');
-            }
+        try {
+            await API.updateUser(uid, { status: newStatus });
+            Utils.showToast(`Usuario ${newStatus === 'ACTIVO' ? 'activado' : 'desactivado'}`, 'success');
+            this.load();
+        } catch (error) {
+            Utils.showToast('Error al actualizar estado', 'error');
         }
     }
 };
