@@ -13,9 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/main.css?v=13">
-    <link rel="stylesheet" href="css/components.css?v=13">
-    <link rel="stylesheet" href="css/pages.css?v=13">
+    <link rel="stylesheet" href="css/main.css?v=14">
+    <link rel="stylesheet" href="css/components.css?v=14">
+    <link rel="stylesheet" href="css/pages.css?v=14">
 </head>
 
 <body>
@@ -192,7 +192,29 @@
                         <button class="btn-icon">🔍</button>
                     </div>
 
-                    <!-- Users List -->
+                    <!-- Filters -->
+                    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="users-filter-status"
+                                style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Estado:</label>
+                            <select id="users-filter-status" class="form-select"
+                                style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
+                                <option value="">Todos</option>
+                                <option value="ACTIVO">ACTIVO</option>
+                                <option value="INACTIVO">INACTIVO</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="users-sort-name"
+                                style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Nombre:</label>
+                            <select id="users-sort-name" class="form-select"
+                                style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
+                                <option value="">Sin ordenar</option>
+                                <option value="asc">A → Z</option>
+                                <option value="desc">Z → A</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="table-container">
                         <table class="data-table" id="users-table">
                             <thead>
@@ -483,19 +505,19 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts -->
-    <script src="js/config.js?v=13"></script>
-    <script src="js/api.js?v=13"></script>
-    <script src="js/auth.js?v=13"></script>
-    <script src="js/utils.js?v=13"></script>
-    <script src="js/views/dashboard.js?v=13"></script>
-    <script src="js/views/users.js?v=13"></script>
-    <script src="js/views/devices.js?v=13"></script>
-    <script src="js/views/logs.js?v=13"></script>
-    <script src="js/views/roles.js?v=13"></script>
-    <script src="js/views/tokens.js?v=13"></script>
-    <script src="js/views/houses.js?v=13"></script>
-    <script src="js/views/masterkeys.js?v=13"></script>
-    <script src="js/app.js?v=13"></script>
+    <script src="js/config.js?v=14"></script>
+    <script src="js/api.js?v=14"></script>
+    <script src="js/auth.js?v=14"></script>
+    <script src="js/utils.js?v=14"></script>
+    <script src="js/views/dashboard.js?v=14"></script>
+    <script src="js/views/users.js?v=14"></script>
+    <script src="js/views/devices.js?v=14"></script>
+    <script src="js/views/logs.js?v=14"></script>
+    <script src="js/views/roles.js?v=14"></script>
+    <script src="js/views/tokens.js?v=14"></script>
+    <script src="js/views/houses.js?v=14"></script>
+    <script src="js/views/masterkeys.js?v=14"></script>
+    <script src="js/app.js?v=14"></script>
 </body>
 
 </html>

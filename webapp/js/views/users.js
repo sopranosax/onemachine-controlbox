@@ -10,6 +10,8 @@ const Users = {
     devices: [],          // All devices (for token type filtering)
     userHouses: [],       // All user-house assignments [{uid, house_id}]
     searchTerm: '',
+    filterStatus: '',     // '' | 'ACTIVO' | 'INACTIVO'
+    sortName: '',         // '' | 'asc' | 'desc'
 
     async load() {
         if (!Auth.can('users.view')) {
@@ -32,6 +34,24 @@ const Users = {
         const addBtn = document.getElementById('btn-add-user');
         if (addBtn) {
             addBtn.onclick = () => this.showAddUserModal();
+        }
+
+        const statusFilter = document.getElementById('users-filter-status');
+        if (statusFilter) {
+            statusFilter.value = this.filterStatus;
+            statusFilter.onchange = (e) => {
+                this.filterStatus = e.target.value;
+                this.renderUsers(this.getFilteredUsers());
+            };
+        }
+
+        const sortName = document.getElementById('users-sort-name');
+        if (sortName) {
+            sortName.value = this.sortName;
+            sortName.onchange = (e) => {
+                this.sortName = e.target.value;
+                this.renderUsers(this.getFilteredUsers());
+            };
         }
     },
 
@@ -89,11 +109,29 @@ const Users = {
     },
 
     getFilteredUsers() {
-        if (!this.searchTerm) return this.users;
-        return this.users.filter(user =>
-            user.user_name.toLowerCase().includes(this.searchTerm) ||
-            user.uid.toLowerCase().includes(this.searchTerm)
-        );
+        let filtered = [...this.users];
+
+        // Search filter
+        if (this.searchTerm) {
+            filtered = filtered.filter(user =>
+                user.user_name.toLowerCase().includes(this.searchTerm) ||
+                user.uid.toLowerCase().includes(this.searchTerm)
+            );
+        }
+
+        // Status filter
+        if (this.filterStatus) {
+            filtered = filtered.filter(user => user.status === this.filterStatus);
+        }
+
+        // Name sort
+        if (this.sortName === 'asc') {
+            filtered.sort((a, b) => a.user_name.localeCompare(b.user_name));
+        } else if (this.sortName === 'desc') {
+            filtered.sort((a, b) => b.user_name.localeCompare(a.user_name));
+        }
+
+        return filtered;
     },
 
     /**
