@@ -272,6 +272,10 @@ const Utils = {
                 return 'badge-danger';
             case Config.EVENT_TYPES.ERROR:
                 return 'badge-warning';
+            case Config.EVENT_TYPES.MASTERKEY_ACCESS:
+                return 'badge-success';
+            case Config.EVENT_TYPES.MASTERKEY_ACCESS_OFFLINE:
+                return 'badge-warning';
             default:
                 return 'badge-info';
         }
@@ -290,7 +294,9 @@ const Utils = {
             [Config.EVENT_TYPES.ERROR]: 'Error',
             [Config.EVENT_TYPES.WIFI_DOWN]: 'WiFi Caído',
             [Config.EVENT_TYPES.WIFI_RESTORED]: 'WiFi Restaurado',
-            [Config.EVENT_TYPES.DEVICE_RESTARTED]: 'Reinicio Dispositivo'
+            [Config.EVENT_TYPES.DEVICE_RESTARTED]: 'Reinicio Dispositivo',
+            [Config.EVENT_TYPES.MASTERKEY_ACCESS]: '🔑 MasterKey',
+            [Config.EVENT_TYPES.MASTERKEY_ACCESS_OFFLINE]: '🔑📴 MasterKey (Offline)'
         };
         return names[eventType] || eventType;
     },
