@@ -133,7 +133,9 @@ const Logs = {
                 <tr>
                     <td>${Utils.formatDate(log.timestamp)}</td>
                     <td><code>${Utils.escapeHtml(log.uid || '-')}</code></td>
-                    <td>${Utils.escapeHtml(log.user_name || '-')}</td>
+                    <td>${log.masterkey_holder
+                    ? `${Utils.escapeHtml(log.masterkey_holder)} <span style="color:var(--text-secondary);font-size:0.8rem;">(🔑 MK)</span>`
+                    : Utils.escapeHtml(log.user_name || '-')}</td>
                     <td><a href="#" onclick="App.navigateTo('devices'); return false;" style="color:var(--accent-primary);text-decoration:none;"><code>${log.esp32_id}</code></a></td>
                     <td><span class="badge badge-info">${log.token_type}</span></td>
                     <td><span class="badge ${Utils.getEventBadgeClass(log.event_type)}">${Utils.getEventTypeName(log.event_type)}</span></td>
@@ -153,6 +155,7 @@ const Logs = {
             Fecha: Utils.formatDate(l.timestamp),
             UID: l.uid,
             Usuario: l.user_name || '',
+            Titular_MK: l.masterkey_holder || '',
             Dispositivo: l.esp32_id,
             Token: l.token_type,
             Evento: l.event_type,

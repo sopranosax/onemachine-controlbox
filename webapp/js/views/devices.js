@@ -292,6 +292,18 @@ const Devices = {
         const tokenName = tokenInfo ? `${device.token_type} — ${tokenInfo.token_name}` : device.token_type;
 
         const container = document.getElementById('device-detail-content');
+
+        // Calculate operation time for Ventana Horaria
+        const twStart = device.time_window_start || '08:00';
+        const twEnd = device.time_window_end || '23:00';
+        const [sh, sm] = twStart.split(':').map(Number);
+        const [eh, em] = twEnd.split(':').map(Number);
+        let diffMin = (eh * 60 + em) - (sh * 60 + sm);
+        if (diffMin < 0) diffMin += 24 * 60; // overnight window
+        const opHours = Math.floor(diffMin / 60);
+        const opMins = diffMin % 60;
+        const opTimeStr = `${String(opHours).padStart(2, '0')}:${String(opMins).padStart(2, '0')}`;
+
         container.innerHTML = `
             <div class="device-detail-grid">
                 <div class="detail-section">
@@ -340,7 +352,7 @@ const Devices = {
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Ventana Horaria</span>
-                        <span class="detail-value">${device.time_window_start} — ${device.time_window_end}</span>
+                        <span class="detail-value">${twStart} — ${twEnd} <span style="color:var(--text-secondary);font-size:0.85rem;">(${opTimeStr} hrs operación)</span></span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Intervalo de Reconexión</span>
@@ -365,6 +377,13 @@ const Devices = {
                         </span>
                     </div>
                 </div>
+
+                <div class="detail-section">
+                    <h3 style="margin:0 0 16px 0;color:var(--text-primary);font-size:1.1rem;">🔑 MasterKeys con Acceso</h3>
+                    <div id="device-masterkeys-content">
+                        <p style="color:var(--text-secondary);font-size:0.9rem;">Cargando masterkeys...</p>
+                    </div>
+                </div>
             </div>
             ${Auth.isMaster() ? `
             <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end;">
@@ -377,6 +396,60 @@ const Devices = {
             </div>
             ` : ''}
         `;
+
+        // Async: load masterkeys for this device
+        this.loadDeviceMasterkeys(device.esp32_id);
+    },
+
+    /**
+     * Fetch and render masterkeys that have access to a device
+     */
+    async loadDeviceMasterkeys(esp32Id) {
+        const contentEl = document.getElementById('device-masterkeys-content');
+        if (!contentEl) return;
+
+        try {
+            const result = await API.getMasterkeysForDevice(esp32Id);
+            const keys = result.masterkeys || [];
+
+            if (!keys.length) {
+                contentEl.innerHTML = `
+                    <div style="text-align:center;padding:16px 0;color:var(--text-secondary);">
+                        <div style="font-size:1.5rem;margin-bottom:6px;">🔓</div>
+                        <p style="margin:0;">Sin masterkeys activas para este dispositivo</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const levelLabels = { 'GLOBAL': '🌐 Global', 'HOUSE': '🏠 Casa', 'DEVICE': '📟 Dispositivo' };
+
+            contentEl.innerHTML = `
+                <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--border-color);">
+                            <th style="text-align:left;padding:6px 8px;color:var(--text-secondary);font-weight:600;">ID</th>
+                            <th style="text-align:left;padding:6px 8px;color:var(--text-secondary);font-weight:600;">Titular</th>
+                            <th style="text-align:left;padding:6px 8px;color:var(--text-secondary);font-weight:600;">Nivel</th>
+                            <th style="text-align:left;padding:6px 8px;color:var(--text-secondary);font-weight:600;">Target</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${keys.map(mk => `
+                            <tr style="border-bottom:1px solid var(--border-color);">
+                                <td style="padding:8px;"><strong>${Utils.escapeHtml(mk.masterkey_id)}</strong></td>
+                                <td style="padding:8px;">${Utils.escapeHtml(mk.masterkey_holder || '—')}</td>
+                                <td style="padding:8px;">${levelLabels[mk.masterkey_level] || mk.masterkey_level}</td>
+                                <td style="padding:8px;">${Utils.escapeHtml(mk.level_target || '—')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error loading device masterkeys:', error);
+            contentEl.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem;">Error al cargar masterkeys</p>';
+        }
     },
 
     /**

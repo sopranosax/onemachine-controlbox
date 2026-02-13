@@ -27,7 +27,7 @@ const MasterKeys = {
 
     async loadData() {
         const tbody = document.getElementById('masterkeys-tbody');
-        tbody.innerHTML = '<tr><td colspan="5" class="loading-placeholder">Cargando masterkeys...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">Cargando masterkeys...</td></tr>';
 
         try {
             const [mkRes, housesRes, devicesRes] = await Promise.all([
@@ -41,7 +41,7 @@ const MasterKeys = {
             this.renderMasterkeys();
         } catch (error) {
             console.error('Error loading masterkeys:', error);
-            tbody.innerHTML = '<tr><td colspan="5" class="loading-placeholder">Error al cargar masterkeys</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="loading-placeholder">Error al cargar masterkeys</td></tr>';
         }
     },
 
@@ -69,7 +69,7 @@ const MasterKeys = {
         if (!this.masterkeys || this.masterkeys.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5">
+                    <td colspan="6">
                         <div class="empty-state">
                             <div class="empty-state-icon">🔑</div>
                             <p class="empty-state-title">Sin masterkeys</p>
@@ -84,6 +84,7 @@ const MasterKeys = {
         tbody.innerHTML = this.masterkeys.map(mk => `
             <tr>
                 <td><strong>${Utils.escapeHtml(mk.masterkey_id)}</strong></td>
+                <td>${Utils.escapeHtml(mk.masterkey_holder || '—')}</td>
                 <td>${this.getLevelLabel(mk.masterkey_level)}</td>
                 <td>${Utils.escapeHtml(this.getTargetLabel(mk))}</td>
                 <td>
@@ -127,6 +128,10 @@ const MasterKeys = {
                 <div class="form-group">
                     <label>ID MasterKey *</label>
                     <input type="text" id="mk-id" placeholder="MK_GLOBAL_001" required>
+                </div>
+                <div class="form-group">
+                    <label>Titular (persona que porta la llave)</label>
+                    <input type="text" id="mk-holder" placeholder="Nombre del titular">
                 </div>
                 <div class="form-group">
                     <label>Nivel *</label>
@@ -192,7 +197,8 @@ const MasterKeys = {
             masterkey_id: document.getElementById('mk-id').value.trim(),
             masterkey_level: level,
             level_target: levelTarget,
-            state: document.getElementById('mk-state').value
+            state: document.getElementById('mk-state').value,
+            masterkey_holder: document.getElementById('mk-holder').value.trim()
         };
 
         try {
@@ -233,6 +239,10 @@ const MasterKeys = {
                 <div class="form-group">
                     <label>ID MasterKey</label>
                     <input type="text" value="${Utils.escapeHtml(mk.masterkey_id)}" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Titular</label>
+                    <input type="text" id="edit-mk-holder" value="${Utils.escapeHtml(mk.masterkey_holder || '')}" placeholder="Nombre del titular">
                 </div>
                 <div class="form-group">
                     <label>Nivel</label>
@@ -291,7 +301,8 @@ const MasterKeys = {
         const data = {
             masterkey_level: level,
             level_target: levelTarget,
-            state: document.getElementById('edit-mk-state').value
+            state: document.getElementById('edit-mk-state').value,
+            masterkey_holder: document.getElementById('edit-mk-holder').value.trim()
         };
 
         try {
