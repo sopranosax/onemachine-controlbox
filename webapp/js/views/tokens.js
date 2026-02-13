@@ -5,9 +5,10 @@
  */
 
 const RESET_DATE_OPTIONS = [
-    { value: 'SIN FECHA FIJA', label: 'Sin fecha fija' },
-    { value: 'PRIMER DÍA DE CADA MES', label: 'Primer día de cada mes' },
-    { value: 'ÚLTIMO DÍA DE CADA MES', label: 'Último día de cada mes' }
+    { value: 'SIN FECHA', label: 'Sin Fecha' },
+    { value: 'DIARIO', label: 'Diario' },
+    { value: 'SEMANAL', label: 'Semanal' },
+    { value: 'MENSUAL', label: 'Mensual' }
 ];
 
 const TokenTypes = {
@@ -48,8 +49,8 @@ const TokenTypes = {
             console.error('Error loading token types:', error);
             // Mock data for demo
             this.tokenTypes = [
-                { token_type: 'WSH', token_name: 'Lavadora', description: 'Token para uso de lavadora', status: 'ACTIVO', reset_value: 0, reset_date: 'SIN FECHA FIJA' },
-                { token_type: 'DRY', token_name: 'Secadora', description: 'Token para uso de secadora', status: 'ACTIVO', reset_value: 0, reset_date: 'SIN FECHA FIJA' }
+                { token_type: 'WSH', token_name: 'Lavadora', description: 'Token para uso de lavadora', status: 'ACTIVO', reset_value: 0, reset_date: 'SIN FECHA', reset_time: '08:00' },
+                { token_type: 'DRY', token_name: 'Secadora', description: 'Token para uso de secadora', status: 'ACTIVO', reset_value: 0, reset_date: 'SIN FECHA', reset_time: '08:00' }
             ];
             this.renderTokenTypes();
         }
@@ -60,7 +61,7 @@ const TokenTypes = {
      */
     getResetDateLabel(value) {
         const option = RESET_DATE_OPTIONS.find(o => o.value === value);
-        return option ? option.label : value || 'Sin fecha fija';
+        return option ? option.label : value || 'Sin Fecha';
     },
 
     renderTokenTypes() {
@@ -89,6 +90,7 @@ const TokenTypes = {
                         <th>Descripción</th>
                         <th>Reset Value</th>
                         <th>Reset Date</th>
+                        <th>Reset Time</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -101,6 +103,7 @@ const TokenTypes = {
                             <td>${Utils.escapeHtml(t.description || '-')}</td>
                             <td>${t.reset_value || 0}</td>
                             <td>${Utils.escapeHtml(this.getResetDateLabel(t.reset_date))}</td>
+                            <td>${Utils.escapeHtml(t.reset_time || '08:00')}</td>
                             <td>
                                 <span class="status-badge ${t.status === 'ACTIVO' ? 'status-active' : 'status-inactive'}">
                                     ${t.status}
@@ -194,6 +197,10 @@ const TokenTypes = {
                             ${RESET_DATE_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="new-token-reset-time">Reset Time</label>
+                        <input type="time" id="new-token-reset-time" value="08:00">
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Crear Token</button>
@@ -211,6 +218,7 @@ const TokenTypes = {
             const status = document.getElementById('new-token-status').value;
             const resetValue = parseInt(document.getElementById('new-token-reset-value').value) || 0;
             const resetDate = document.getElementById('new-token-reset-date').value;
+            const resetTime = document.getElementById('new-token-reset-time').value || '08:00';
 
             if (!tokenType || !tokenName) {
                 Utils.showToast('Código y nombre son requeridos', 'error');
@@ -224,7 +232,8 @@ const TokenTypes = {
                     description: description,
                     status: status,
                     reset_value: resetValue,
-                    reset_date: resetDate
+                    reset_date: resetDate,
+                    reset_time: resetTime
                 });
 
                 if (response.success) {
@@ -245,7 +254,7 @@ const TokenTypes = {
         if (!token) return;
 
         const resetDateOptions = RESET_DATE_OPTIONS.map(o =>
-            `<option value="${o.value}" ${(token.reset_date || 'SIN FECHA FIJA') === o.value ? 'selected' : ''}>${o.label}</option>`
+            `<option value="${o.value}" ${(token.reset_date || 'SIN FECHA') === o.value ? 'selected' : ''}>${o.label}</option>`
         ).join('');
 
         Utils.showModal({
@@ -274,6 +283,10 @@ const TokenTypes = {
                             ${resetDateOptions}
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="edit-token-reset-time">Reset Time</label>
+                        <input type="time" id="edit-token-reset-time" value="${token.reset_time || '08:00'}">
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -289,13 +302,15 @@ const TokenTypes = {
             const description = document.getElementById('edit-token-description').value.trim();
             const resetValue = parseInt(document.getElementById('edit-token-reset-value').value) || 0;
             const resetDate = document.getElementById('edit-token-reset-date').value;
+            const resetTime = document.getElementById('edit-token-reset-time').value || '08:00';
 
             try {
                 const response = await API.updateTokenType(tokenType, {
                     token_name: tokenName,
                     description: description,
                     reset_value: resetValue,
-                    reset_date: resetDate
+                    reset_date: resetDate,
+                    reset_time: resetTime
                 });
 
                 if (response.success) {
