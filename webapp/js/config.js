@@ -5,7 +5,7 @@
 const Config = {
     // Google Apps Script Web App URL
     // Replace with your deployed Apps Script Web App URL
-    API_BASE_URL: 'https://script.google.com/macros/s/AKfycbx04MS_V64sWhrK647mPkhyF36jR6nb3IlmpSDE_RfL0G32mX14Ic95xqNqPRkWswq81Q/exec',
+    API_BASE_URL: 'https://script.google.com/macros/s/AKfycbz_GMUOnJHzE-7tzUr_-21sdjrfg5cqsxh0rwY1rcUwcalpSrdkcIv8Z8Rb4DaFH-DWBw/exec',
 
     // Roles
     ROLES: {
