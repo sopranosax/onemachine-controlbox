@@ -54,13 +54,13 @@ const Devices = {
         try {
             const response = await API.getTokenTypes();
             this.tokenTypes = response.token_types || [];
-            
+
             // Populate filter
             const filter = document.getElementById('devices-filter-type');
             if (filter) {
                 const currentVal = filter.value;
                 const sorted = [...this.tokenTypes].sort((a, b) => a.token_type.localeCompare(b.token_type));
-                filter.innerHTML = '<option value="">Todos</option>' + 
+                filter.innerHTML = '<option value="">Todos</option>' +
                     sorted.map(t => `<option value="${t.token_type}">${t.token_type}</option>`).join('');
                 filter.value = currentVal; // Restore selection if reloaded
             }
@@ -82,7 +82,7 @@ const Devices = {
             if (filter) {
                 const currentVal = filter.value;
                 const sorted = [...this.houses].sort((a, b) => a.house_id.localeCompare(b.house_id));
-                filter.innerHTML = '<option value="">Todas</option>' + 
+                filter.innerHTML = '<option value="">Todas</option>' +
                     sorted.map(h => `<option value="${Utils.escapeHtml(h.house_id)}">${Utils.escapeHtml(h.house_id)}</option>`).join('');
                 filter.value = currentVal;
             }
@@ -358,7 +358,7 @@ const Devices = {
                         <span class="detail-label">Contraseña</span>
                         <span class="detail-value">
                             <span id="wifi-pass-hidden">••••••••</span>
-                            <span id="wifi-pass-visible" style="display:none;">${Utils.escapeHtml(device.wifi_psswd || '—')}</span>
+                            <span id="wifi-pass-visible" style="display:none;">${Utils.escapeHtml(device.wifi_password || '—')}</span>
                             <button class="btn-icon" style="margin-left:8px;font-size:0.85rem;" onclick="Devices.togglePasswordVisibility()" title="Mostrar/ocultar">
                                 👁️
                             </button>
@@ -492,7 +492,7 @@ const Devices = {
                 time_limit_min: parseInt(document.getElementById('new-device-time').value),
                 reconnect_sec: parseInt(document.getElementById('new-device-reconnect').value),
                 wifi_ssid: document.getElementById('new-device-ssid').value.trim(),
-                wifi_psswd: document.getElementById('new-device-password').value.trim(),
+                wifi_password: document.getElementById('new-device-password').value.trim(),
                 house_id: document.getElementById('new-device-house').value,
                 time_window_start: document.getElementById('new-device-tw-start').value || '08:00',
                 time_window_end: document.getElementById('new-device-tw-end').value || '23:00',
@@ -573,7 +573,7 @@ const Devices = {
                     </div>
                     <div class="form-group">
                         <label for="edit-device-password">WiFi Password *</label>
-                        <input type="text" id="edit-device-password" required value="${Utils.escapeHtml(device.wifi_psswd || '')}">
+                        <input type="text" id="edit-device-password" required value="${Utils.escapeHtml(device.wifi_password || '')}">
                     </div>
                     <div class="form-row" style="display:flex;gap:12px;">
                         <div class="form-group" style="flex:1;">
@@ -602,7 +602,7 @@ const Devices = {
                 time_limit_min: parseInt(document.getElementById('edit-device-time').value),
                 reconnect_sec: parseInt(document.getElementById('edit-device-reconnect').value),
                 wifi_ssid: document.getElementById('edit-device-ssid').value.trim(),
-                wifi_psswd: document.getElementById('edit-device-password').value.trim(),
+                wifi_password: document.getElementById('edit-device-password').value.trim(),
                 house_id: document.getElementById('edit-device-house').value,
                 time_window_start: document.getElementById('edit-device-tw-start').value || '08:00',
                 time_window_end: document.getElementById('edit-device-tw-end').value || '23:00'
