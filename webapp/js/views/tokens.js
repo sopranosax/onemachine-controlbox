@@ -1,7 +1,14 @@
 /**
  * Token Types View for IoT Control WebApp
- * MASTER role only
+ * MASTER role: full CRUD + reset
+ * ADMIN role: view + reset only
  */
+
+const RESET_DATE_OPTIONS = [
+    { value: 'SIN FECHA FIJA', label: 'Sin fecha fija' },
+    { value: 'PRIMER DÍA DE CADA MES', label: 'Primer día de cada mes' },
+    { value: 'ÚLTIMO DÍA DE CADA MES', label: 'Último día de cada mes' }
+];
 
 const TokenTypes = {
     tokenTypes: [],
@@ -17,10 +24,15 @@ const TokenTypes = {
     },
 
     bindEvents() {
-        // Add token type button
+        // Add token type button (MASTER only)
         const addBtn = document.getElementById('add-token-type-btn');
         if (addBtn) {
-            addBtn.onclick = () => this.showAddModal();
+            if (Auth.can('tokens.create')) {
+                addBtn.style.display = '';
+                addBtn.onclick = () => this.showAddModal();
+            } else {
+                addBtn.style.display = 'none';
+            }
         }
     },
 
@@ -36,15 +48,26 @@ const TokenTypes = {
             console.error('Error loading token types:', error);
             // Mock data for demo
             this.tokenTypes = [
-                { token_type: 'WSH', token_name: 'Lavadora', description: 'Token para uso de lavadora', status: 'ACTIVO' },
-                { token_type: 'DRY', token_name: 'Secadora', description: 'Token para uso de secadora', status: 'ACTIVO' }
+                { token_type: 'WSH', token_name: 'Lavadora', description: 'Token para uso de lavadora', status: 'ACTIVO', reset_value: 0, reset_date: 'SIN FECHA FIJA' },
+                { token_type: 'DRY', token_name: 'Secadora', description: 'Token para uso de secadora', status: 'ACTIVO', reset_value: 0, reset_date: 'SIN FECHA FIJA' }
             ];
             this.renderTokenTypes();
         }
     },
 
+    /**
+     * Get a human-readable label for a RESET_DATE value
+     */
+    getResetDateLabel(value) {
+        const option = RESET_DATE_OPTIONS.find(o => o.value === value);
+        return option ? option.label : value || 'Sin fecha fija';
+    },
+
     renderTokenTypes() {
         const container = document.getElementById('token-types-list');
+        const canEdit = Auth.can('tokens.edit');
+        const canDelete = Auth.can('tokens.delete');
+        const canReset = Auth.can('tokens.reset');
 
         if (!this.tokenTypes || this.tokenTypes.length === 0) {
             container.innerHTML = `
@@ -64,6 +87,8 @@ const TokenTypes = {
                         <th>Código</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
+                        <th>Reset Value</th>
+                        <th>Reset Date</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -74,28 +99,64 @@ const TokenTypes = {
                             <td><strong>${Utils.escapeHtml(t.token_type)}</strong></td>
                             <td>${Utils.escapeHtml(t.token_name)}</td>
                             <td>${Utils.escapeHtml(t.description || '-')}</td>
+                            <td>${t.reset_value || 0}</td>
+                            <td>${Utils.escapeHtml(this.getResetDateLabel(t.reset_date))}</td>
                             <td>
                                 <span class="status-badge ${t.status === 'ACTIVO' ? 'status-active' : 'status-inactive'}">
                                     ${t.status}
                                 </span>
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-secondary" onclick="TokenTypes.editTokenType('${t.token_type}')">
-                                    ✏️ Editar
-                                </button>
-                                <button class="btn btn-sm ${t.status === 'ACTIVO' ? 'btn-warning' : 'btn-success'}" 
-                                        onclick="TokenTypes.toggleStatus('${t.token_type}', '${t.status}')">
-                                    ${t.status === 'ACTIVO' ? '⏸️ Desactivar' : '▶️ Activar'}
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="TokenTypes.deleteTokenType('${t.token_type}')">
-                                    🗑️ Eliminar
-                                </button>
+                                ${canReset && t.status === 'ACTIVO' ? `
+                                    <button class="btn btn-sm btn-primary" onclick="TokenTypes.resetBalance('${t.token_type}', ${t.reset_value || 0})">
+                                        🔄 Actualizar
+                                    </button>
+                                ` : ''}
+                                ${canEdit ? `
+                                    <button class="btn btn-sm btn-secondary" onclick="TokenTypes.editTokenType('${t.token_type}')">
+                                        ✏️ Editar
+                                    </button>
+                                    <button class="btn btn-sm ${t.status === 'ACTIVO' ? 'btn-warning' : 'btn-success'}" 
+                                            onclick="TokenTypes.toggleStatus('${t.token_type}', '${t.status}')">
+                                        ${t.status === 'ACTIVO' ? '⏸️ Desactivar' : '▶️ Activar'}
+                                    </button>
+                                ` : ''}
+                                ${canDelete ? `
+                                    <button class="btn btn-sm btn-danger" onclick="TokenTypes.deleteTokenType('${t.token_type}')">
+                                        🗑️ Eliminar
+                                    </button>
+                                ` : ''}
                             </td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
         `;
+    },
+
+    /**
+     * Bulk reset balance for all active users with a given token type
+     */
+    async resetBalance(tokenType, resetValue) {
+        const confirmed = await Utils.showConfirm({
+            title: '🔄 Actualizar Balances',
+            message: `¿Establecer el balance de TODOS los usuarios activos con token "${tokenType}" a ${resetValue}?\n\nEsta acción reemplazará el balance actual de cada usuario.`,
+            confirmText: 'Actualizar',
+            type: 'warning'
+        });
+
+        if (confirmed) {
+            try {
+                const response = await API.resetBalanceByTokenType(tokenType, resetValue);
+                if (response.success) {
+                    Utils.showToast(`Balances actualizados: ${response.users_updated} usuario(s) afectado(s)`, 'success');
+                } else {
+                    Utils.showToast(response.error || 'Error al actualizar balances', 'error');
+                }
+            } catch (error) {
+                Utils.showToast('Error de conexión', 'error');
+            }
+        }
     },
 
     showAddModal() {
@@ -123,6 +184,16 @@ const TokenTypes = {
                             <option value="INACTIVO">Inactivo</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="new-token-reset-value">Reset Value</label>
+                        <input type="number" id="new-token-reset-value" min="0" value="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-token-reset-date">Reset Date</label>
+                        <select id="new-token-reset-date">
+                            ${RESET_DATE_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+                        </select>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Crear Token</button>
@@ -138,6 +209,8 @@ const TokenTypes = {
             const tokenName = document.getElementById('new-token-name').value.trim();
             const description = document.getElementById('new-token-description').value.trim();
             const status = document.getElementById('new-token-status').value;
+            const resetValue = parseInt(document.getElementById('new-token-reset-value').value) || 0;
+            const resetDate = document.getElementById('new-token-reset-date').value;
 
             if (!tokenType || !tokenName) {
                 Utils.showToast('Código y nombre son requeridos', 'error');
@@ -149,7 +222,9 @@ const TokenTypes = {
                     token_type: tokenType,
                     token_name: tokenName,
                     description: description,
-                    status: status
+                    status: status,
+                    reset_value: resetValue,
+                    reset_date: resetDate
                 });
 
                 if (response.success) {
@@ -169,6 +244,10 @@ const TokenTypes = {
         const token = this.tokenTypes.find(t => t.token_type === tokenType);
         if (!token) return;
 
+        const resetDateOptions = RESET_DATE_OPTIONS.map(o =>
+            `<option value="${o.value}" ${(token.reset_date || 'SIN FECHA FIJA') === o.value ? 'selected' : ''}>${o.label}</option>`
+        ).join('');
+
         Utils.showModal({
             title: `Editar: ${token.token_name}`,
             content: `
@@ -185,6 +264,16 @@ const TokenTypes = {
                         <label for="edit-token-description">Descripción</label>
                         <textarea id="edit-token-description" rows="2">${Utils.escapeHtml(token.description || '')}</textarea>
                     </div>
+                    <div class="form-group">
+                        <label for="edit-token-reset-value">Reset Value</label>
+                        <input type="number" id="edit-token-reset-value" min="0" value="${token.reset_value || 0}">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-token-reset-date">Reset Date</label>
+                        <select id="edit-token-reset-date">
+                            ${resetDateOptions}
+                        </select>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -198,11 +287,15 @@ const TokenTypes = {
 
             const tokenName = document.getElementById('edit-token-name').value.trim();
             const description = document.getElementById('edit-token-description').value.trim();
+            const resetValue = parseInt(document.getElementById('edit-token-reset-value').value) || 0;
+            const resetDate = document.getElementById('edit-token-reset-date').value;
 
             try {
                 const response = await API.updateTokenType(tokenType, {
                     token_name: tokenName,
-                    description: description
+                    description: description,
+                    reset_value: resetValue,
+                    reset_date: resetDate
                 });
 
                 if (response.success) {

@@ -139,6 +139,10 @@ const API = {
         return this.post('deleteTokenType', { token_type: tokenType, force: force });
     },
 
+    async resetBalanceByTokenType(tokenType, resetValue) {
+        return this.post('resetBalanceByTokenType', { token_type: tokenType, reset_value: resetValue });
+    },
+
     // ==================== ADMINS ====================
 
     async getAdmins() {

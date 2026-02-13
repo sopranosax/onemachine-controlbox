@@ -163,11 +163,12 @@ const Auth = {
             'roles.edit': [Config.ROLES.MASTER],
             'roles.viewAdminLog': [Config.ROLES.MASTER],
 
-            // Token Types actions (MASTER only)
-            'tokens.view': [Config.ROLES.MASTER],
+            // Token Types actions
+            'tokens.view': [Config.ROLES.MASTER, Config.ROLES.ADMIN],
             'tokens.create': [Config.ROLES.MASTER],
             'tokens.edit': [Config.ROLES.MASTER],
             'tokens.delete': [Config.ROLES.MASTER],
+            'tokens.reset': [Config.ROLES.MASTER, Config.ROLES.ADMIN],
 
             // Houses actions
             'houses.view': [Config.ROLES.MASTER, Config.ROLES.ADMIN],
