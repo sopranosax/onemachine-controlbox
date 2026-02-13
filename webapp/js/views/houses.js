@@ -205,7 +205,7 @@ const Houses = {
 
         // Build detail
         const adminEmail = this.getAdminForHouse(houseId);
-        const houseDevices = this.getDevicesForHouse(houseId).sort((a, b) => a.token_type.localeCompare(b.token_type));
+        const houseDevices = this.getDevicesForHouse(houseId).filter(d => d.active === true || d.active === 'TRUE' || d.active === 'true').sort((a, b) => a.token_type.localeCompare(b.token_type));
         const fullAddress = [house.house_street, house.house_number, house.house_extra].filter(Boolean).join(' ');
         const imgSrc = house.house_img || '';
         const imgHtml = imgSrc
