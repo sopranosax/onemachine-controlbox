@@ -133,8 +133,8 @@ const Logs = {
                 <tr>
                     <td>${Utils.formatDate(log.timestamp)}</td>
                     <td><code>${Utils.escapeHtml(log.uid || '-')}</code></td>
-                    <td>${log.masterkey_holder
-                    ? `${Utils.escapeHtml(log.masterkey_holder)} <span style="color:var(--text-secondary);font-size:0.8rem;">(🔑 MK)</span>`
+                    <td>${log.is_masterkey_event
+                    ? `${Utils.escapeHtml(log.masterkey_holder || log.uid)} <span style="color:var(--text-secondary);font-size:0.8rem;">(🔑 MK)</span>`
                     : Utils.escapeHtml(log.user_name || '-')}</td>
                     <td><a href="#" onclick="App.navigateTo('devices'); return false;" style="color:var(--accent-primary);text-decoration:none;"><code>${log.esp32_id}</code></a></td>
                     <td><span class="badge badge-info">${log.token_type}</span></td>
