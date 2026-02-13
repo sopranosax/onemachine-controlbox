@@ -22,14 +22,25 @@ const Logs = {
     },
 
     bindEvents() {
-        const filterBtn = document.getElementById('btn-apply-filters');
-        if (filterBtn) filterBtn.onclick = () => this.applyFilters();
-
         const exportBtn = document.getElementById('btn-export-logs');
         if (exportBtn) {
             exportBtn.onclick = () => this.exportLogs();
             exportBtn.style.display = Auth.can('logs.export') ? '' : 'none';
         }
+
+        // Instant filters (matching devices page pattern)
+        const filters = ['filter-device', 'filter-event-type'];
+        filters.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.onchange = () => this.applyFilters();
+        });
+
+        // Date filters also apply instantly
+        const dateFilters = ['filter-date-from', 'filter-date-to'];
+        dateFilters.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.onchange = () => this.applyFilters();
+        });
     },
 
     initFilters() {
@@ -73,7 +84,7 @@ const Logs = {
     },
 
     renderLoadingState() {
-        document.getElementById('logs-tbody').innerHTML = '<tr><td colspan="6" class="loading-placeholder">Cargando...</td></tr>';
+        document.getElementById('logs-tbody').innerHTML = '<tr><td colspan="8" class="loading-placeholder">Cargando...</td></tr>';
     },
 
     applyFilters() {
@@ -89,14 +100,13 @@ const Logs = {
         if (this.filters.eventType) filtered = filtered.filter(l => l.event_type === this.filters.eventType);
 
         this.renderLogs(filtered);
-        Utils.showToast(`${filtered.length} registros`, 'success');
     },
 
     renderLogs(logs) {
         const tbody = document.getElementById('logs-tbody');
 
         if (!logs || !logs.length) {
-            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No hay registros</p></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><p>No hay registros</p></div></td></tr>';
             return;
         }
 
@@ -122,12 +132,13 @@ const Logs = {
             return `
                 <tr>
                     <td>${Utils.formatDate(log.timestamp)}</td>
-                    <td>${Utils.escapeHtml(log.user_name || log.uid)}</td>
+                    <td><code>${Utils.escapeHtml(log.uid || '-')}</code></td>
+                    <td>${Utils.escapeHtml(log.user_name || '-')}</td>
                     <td><a href="#" onclick="App.navigateTo('devices'); return false;" style="color:var(--accent-primary);text-decoration:none;"><code>${log.esp32_id}</code></a></td>
                     <td><span class="badge badge-info">${log.token_type}</span></td>
                     <td><span class="badge ${Utils.getEventBadgeClass(log.event_type)}">${Utils.getEventTypeName(log.event_type)}</span></td>
                     <td>${reasonBadge}</td>
-                    <td>${log.token_balance_after ?? '-'}</td>
+                    <td>${log.token_balance_after != null ? log.token_balance_after : '-'}</td>
                 </tr>
             `;
         }).join('');

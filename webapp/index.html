@@ -322,32 +322,30 @@
                         </button>
                     </div>
 
-                    <!-- Filters -->
-                    <div class="filters-bar">
-                        <div class="filter-group">
-                            <label>Desde:</label>
-                            <input type="date" id="filter-date-from">
+                    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="filter-date-from" style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Desde:</label>
+                            <input type="date" id="filter-date-from" class="form-select" style="padding:6px 10px;font-size:0.85rem;">
                         </div>
-                        <div class="filter-group">
-                            <label>Hasta:</label>
-                            <input type="date" id="filter-date-to">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="filter-date-to" style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Hasta:</label>
+                            <input type="date" id="filter-date-to" class="form-select" style="padding:6px 10px;font-size:0.85rem;">
                         </div>
-                        <div class="filter-group">
-                            <label>Dispositivo:</label>
-                            <select id="filter-device">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="filter-device" style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Dispositivo:</label>
+                            <select id="filter-device" class="form-select" style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
                                 <option value="">Todos</option>
                             </select>
                         </div>
-                        <div class="filter-group">
-                            <label>Tipo:</label>
-                            <select id="filter-event-type">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="filter-event-type" style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Tipo:</label>
+                            <select id="filter-event-type" class="form-select" style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
                                 <option value="">Todos</option>
                                 <option value="ACCESS_GRANTED">Acceso Concedido</option>
                                 <option value="ACCESS_DENIED">Acceso Denegado</option>
                                 <option value="ERROR">Error</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary" id="btn-apply-filters">Filtrar</button>
                     </div>
 
                     <!-- Logs Table -->
@@ -356,7 +354,8 @@
                             <thead>
                                 <tr>
                                     <th>Fecha/Hora</th>
-                                    <th>Usuario</th>
+                                    <th>UID</th>
+                                    <th>Nombre</th>
                                     <th>Dispositivo</th>
                                     <th>Tipo Token</th>
                                     <th>Evento</th>
@@ -366,7 +365,7 @@
                             </thead>
                             <tbody id="logs-tbody">
                                 <tr>
-                                    <td colspan="6" class="loading-placeholder">Cargando logs...</td>
+                                    <td colspan="8" class="loading-placeholder">Cargando logs...</td>
                                 </tr>
                             </tbody>
                         </table>
