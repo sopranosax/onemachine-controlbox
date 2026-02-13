@@ -67,7 +67,7 @@ const Houses = {
     },
 
     getDeviceCountForHouse(houseId) {
-        return this.devices.filter(d => d.house_id === houseId).length;
+        return this.devices.filter(d => d.house_id === houseId && (d.active === true || d.active === 'TRUE' || d.active === 'true')).length;
     },
 
     getDevicesForHouse(houseId) {
