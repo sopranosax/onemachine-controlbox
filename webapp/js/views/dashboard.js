@@ -14,8 +14,18 @@ const Dashboard = {
     _tooltip: null,
     _barHitAreas: [],
 
-    // Known event types for the Event selector
-    EVENT_TYPES: ['ACCESS_GRANTED', 'ACCESS_DENIED', 'OUT_OF_TIME_WINDOW', 'DEVICE_INACTIVE', 'MASTERKEY_ACCESS', 'BALANCE_ZERO'],
+    // User interaction event types (A-Z)
+    EVENT_TYPES: [
+        'ACCESS_GRANTED',
+        'INACTIVE_USER',
+        'INVALID_TOKEN_TYPE',
+        'MASTERKEY_ACCESS',
+        'MASTERKEY_ACCESS_OFFLINE',
+        'NO_TOKENS',
+        'NOT_IN_HOUSE_USER',
+        'OUTSIDE_TIME_WINDOW',
+        'UNREGISTERED_USER'
+    ],
 
     async load() {
         const dateEl = document.getElementById('current-date');
@@ -88,18 +98,20 @@ const Dashboard = {
 
         this.buildMultiSelect('chart-house', this.houses.map(h => h.house_id), this.selectedHouses, 'Todas');
         this.buildMultiSelect('chart-token', this.tokenTypes.map(t => t.token_type), this.selectedTokenTypes, 'Todos');
-        this.buildMultiSelect('chart-event', this.EVENT_TYPES, this.selectedEventTypes, 'Evento');
+        this.buildMultiSelect('chart-event', this.EVENT_TYPES, this.selectedEventTypes, 'Evento', v => Utils.getEventTypeName(v));
     },
 
     // ==================== MULTI-SELECT BUILDER ====================
-    buildMultiSelect(prefix, options, selectedArr, defaultLabel) {
+    buildMultiSelect(prefix, options, selectedArr, defaultLabel, labelFn) {
         const btn = document.getElementById(`${prefix}-btn`);
         const dropdown = document.getElementById(`${prefix}-dropdown`);
         if (!btn || !dropdown) return;
 
+        const getLabel = labelFn || (v => v);
+
         dropdown.innerHTML = options.map(opt => {
             const checked = selectedArr.length === 0 || selectedArr.includes(opt) ? 'checked' : '';
-            return `<label><input type="checkbox" value="${Utils.escapeHtml(opt)}" ${checked}> ${Utils.escapeHtml(opt)}</label>`;
+            return `<label><input type="checkbox" value="${Utils.escapeHtml(opt)}" ${checked}> ${Utils.escapeHtml(getLabel(opt))}</label>`;
         }).join('');
 
         const updateLabel = () => {
@@ -107,7 +119,7 @@ const Dashboard = {
             if (checked.length === 0 || checked.length === options.length) {
                 btn.textContent = defaultLabel;
             } else if (checked.length === 1) {
-                btn.textContent = checked[0];
+                btn.textContent = getLabel(checked[0]);
             } else {
                 btn.textContent = `${checked.length} sel.`;
             }
@@ -117,18 +129,16 @@ const Dashboard = {
         // Toggle dropdown
         btn.onclick = (e) => {
             e.stopPropagation();
-            // Close any other open dropdowns first
             document.querySelectorAll('.multi-select-dropdown').forEach(d => {
                 if (d !== dropdown) d.classList.add('hidden');
             });
             dropdown.classList.toggle('hidden');
         };
 
-        // Handle checkbox changes
+        // Handle checkbox changes — only update state, no auto-refresh
         dropdown.addEventListener('change', () => {
             updateLabel();
             const checked = Array.from(dropdown.querySelectorAll('input:checked')).map(cb => cb.value);
-            // Update the corresponding selected array
             if (prefix === 'chart-house') {
                 this.selectedHouses = checked.length === options.length ? [] : checked;
             } else if (prefix === 'chart-token') {
@@ -136,7 +146,6 @@ const Dashboard = {
             } else if (prefix === 'chart-event') {
                 this.selectedEventTypes = checked.length === options.length ? [] : checked;
             }
-            this.loadChartData();
         });
     },
 
@@ -145,14 +154,13 @@ const Dashboard = {
         const startEl = document.getElementById('chart-date-start');
         const endEl = document.getElementById('chart-date-end');
 
-        const onDateChange = () => {
-            this.startDate = startEl.value;
-            this.endDate = endEl.value;
-            this.loadChartData();
-        };
+        // Date inputs just update state, no auto-refresh
+        if (startEl) startEl.addEventListener('change', () => { this.startDate = startEl.value; });
+        if (endEl) endEl.addEventListener('change', () => { this.endDate = endEl.value; });
 
-        if (startEl) startEl.addEventListener('change', onDateChange);
-        if (endEl) endEl.addEventListener('change', onDateChange);
+        // "Actualizar Gráfico" button triggers the query
+        const refreshBtn = document.getElementById('btn-refresh-chart');
+        if (refreshBtn) refreshBtn.onclick = () => this.loadChartData();
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', (e) => {

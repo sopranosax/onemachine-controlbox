@@ -266,16 +266,18 @@ const Utils = {
      */
     getEventBadgeClass(eventType) {
         switch (eventType) {
-            case Config.EVENT_TYPES.ACCESS_GRANTED:
+            case 'ACCESS_GRANTED':
+            case 'MASTERKEY_ACCESS':
                 return 'badge-success';
-            case Config.EVENT_TYPES.ACCESS_DENIED:
+            case 'MASTERKEY_ACCESS_OFFLINE':
+                return 'badge-warning';
+            case 'INACTIVE_USER':
+            case 'INVALID_TOKEN_TYPE':
+            case 'NO_TOKENS':
+            case 'NOT_IN_HOUSE_USER':
+            case 'OUTSIDE_TIME_WINDOW':
+            case 'UNREGISTERED_USER':
                 return 'badge-danger';
-            case Config.EVENT_TYPES.ERROR:
-                return 'badge-warning';
-            case Config.EVENT_TYPES.MASTERKEY_ACCESS:
-                return 'badge-success';
-            case Config.EVENT_TYPES.MASTERKEY_ACCESS_OFFLINE:
-                return 'badge-warning';
             default:
                 return 'badge-info';
         }
@@ -288,15 +290,15 @@ const Utils = {
      */
     getEventTypeName(eventType) {
         const names = {
-            [Config.EVENT_TYPES.ACCESS_GRANTED]: 'Acceso Concedido',
-            [Config.EVENT_TYPES.ACCESS_DENIED]: 'Acceso Denegado',
-            [Config.EVENT_TYPES.IN_USE]: 'En Uso',
-            [Config.EVENT_TYPES.ERROR]: 'Error',
-            [Config.EVENT_TYPES.WIFI_DOWN]: 'WiFi Caído',
-            [Config.EVENT_TYPES.WIFI_RESTORED]: 'WiFi Restaurado',
-            [Config.EVENT_TYPES.DEVICE_RESTARTED]: 'Reinicio Dispositivo',
-            [Config.EVENT_TYPES.MASTERKEY_ACCESS]: '🔑 MasterKey',
-            [Config.EVENT_TYPES.MASTERKEY_ACCESS_OFFLINE]: '🔑📴 MasterKey (Offline)'
+            'ACCESS_GRANTED': 'Acceso Concedido',
+            'INACTIVE_USER': 'Usuario Inactivo',
+            'INVALID_TOKEN_TYPE': 'Usuario Sin Token Válido',
+            'MASTERKEY_ACCESS': 'Acceso de Llave Maestra',
+            'MASTERKEY_ACCESS_OFFLINE': 'Acceso de Llave Maestra Offline',
+            'NO_TOKENS': 'Usuario Sin Tokens',
+            'NOT_IN_HOUSE_USER': 'Usuario No Autorizado en Casa',
+            'OUTSIDE_TIME_WINDOW': 'Intento Fuera de Horario',
+            'UNREGISTERED_USER': 'Usuario No Registrado'
         };
         return names[eventType] || eventType;
     },

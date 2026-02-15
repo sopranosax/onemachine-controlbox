@@ -186,9 +186,14 @@
                             <div class="chart-filter-group">
                                 <label>Evento</label>
                                 <div class="multi-select" id="chart-event-select">
-                                    <button type="button" class="multi-select-btn" id="chart-event-btn">ACCESS_GRANTED</button>
+                                    <button type="button" class="multi-select-btn" id="chart-event-btn">Acceso
+                                        Concedido</button>
                                     <div class="multi-select-dropdown hidden" id="chart-event-dropdown"></div>
                                 </div>
+                            </div>
+                            <div class="chart-filter-group" style="align-self:flex-end;">
+                                <button type="button" class="btn btn-primary" id="btn-refresh-chart">📊 Actualizar
+                                    Gráfico</button>
                             </div>
                         </div>
 
@@ -355,37 +360,45 @@
                         </button>
                     </div>
 
-                    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <label for="filter-date-from"
-                                style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Desde:</label>
-                            <input type="date" id="filter-date-from" class="form-select"
-                                style="padding:6px 10px;font-size:0.85rem;">
+                    <div class="chart-filters">
+                        <div class="chart-filter-group">
+                            <label>Desde</label>
+                            <input type="date" id="filter-date-from" class="form-select">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <label for="filter-date-to"
-                                style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Hasta:</label>
-                            <input type="date" id="filter-date-to" class="form-select"
-                                style="padding:6px 10px;font-size:0.85rem;">
+                        <div class="chart-filter-group">
+                            <label>Hasta</label>
+                            <input type="date" id="filter-date-to" class="form-select">
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <label for="filter-device"
-                                style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Dispositivo:</label>
-                            <select id="filter-device" class="form-select"
-                                style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
-                                <option value="">Todos</option>
-                            </select>
+                        <div class="chart-filter-group">
+                            <label>Casa</label>
+                            <div class="multi-select">
+                                <button type="button" class="multi-select-btn" id="log-house-btn">Todas</button>
+                                <div class="multi-select-dropdown hidden" id="log-house-dropdown"></div>
+                            </div>
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <label for="filter-event-type"
-                                style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Tipo:</label>
-                            <select id="filter-event-type" class="form-select"
-                                style="padding:6px 10px;font-size:0.85rem;min-width:120px;">
-                                <option value="">Todos</option>
-                                <option value="ACCESS_GRANTED">Acceso Concedido</option>
-                                <option value="ACCESS_DENIED">Acceso Denegado</option>
-                                <option value="ERROR">Error</option>
-                            </select>
+                        <div class="chart-filter-group">
+                            <label>Dispositivo</label>
+                            <div class="multi-select">
+                                <button type="button" class="multi-select-btn" id="log-device-btn">Todos</button>
+                                <div class="multi-select-dropdown hidden" id="log-device-dropdown"></div>
+                            </div>
+                        </div>
+                        <div class="chart-filter-group">
+                            <label>Tipo Token</label>
+                            <div class="multi-select">
+                                <button type="button" class="multi-select-btn" id="log-token-btn">Todos</button>
+                                <div class="multi-select-dropdown hidden" id="log-token-dropdown"></div>
+                            </div>
+                        </div>
+                        <div class="chart-filter-group">
+                            <label>Evento</label>
+                            <div class="multi-select">
+                                <button type="button" class="multi-select-btn" id="log-event-btn">Todos</button>
+                                <div class="multi-select-dropdown hidden" id="log-event-dropdown"></div>
+                            </div>
+                        </div>
+                        <div class="chart-filter-group" style="align-self:flex-end;">
+                            <button type="button" class="btn btn-primary" id="btn-search-logs">🔍 Buscar</button>
                         </div>
                     </div>
 
@@ -397,10 +410,10 @@
                                     <th>Fecha/Hora</th>
                                     <th>UID</th>
                                     <th>Nombre</th>
+                                    <th>Casa</th>
                                     <th>Dispositivo</th>
                                     <th>Tipo Token</th>
                                     <th>Evento</th>
-                                    <th>Razón</th>
                                     <th>Balance</th>
                                 </tr>
                             </thead>
