@@ -121,59 +121,84 @@
                         <span class="page-date" id="current-date"></span>
                     </div>
 
-                    <!-- Stats Cards -->
-                    <div class="stats-grid">
-                        <div class="stat-card stat-green">
+                    <!-- Stats Cards (compact) -->
+                    <div class="stats-grid stats-grid-compact">
+                        <div class="stat-card stat-card-compact stat-green">
                             <div class="stat-header">
                                 <span class="stat-label">Dispositivos Activos</span>
                                 <span class="stat-icon">📟</span>
                             </div>
                             <div class="stat-value" id="stat-devices-active">0</div>
-                            <div class="stat-trend positive">
-                                <span>↑</span> <span id="stat-devices-trend">Online</span>
-                            </div>
                         </div>
-                        <div class="stat-card stat-red">
+                        <div class="stat-card stat-card-compact stat-red">
                             <div class="stat-header">
                                 <span class="stat-label">Dispositivos Offline</span>
                                 <span class="stat-icon">⚠️</span>
                             </div>
                             <div class="stat-value" id="stat-devices-offline">0</div>
-                            <div class="stat-trend negative">
-                                <span>!</span> <span>Requieren atención</span>
-                            </div>
                         </div>
-                        <div class="stat-card stat-yellow">
+                        <div class="stat-card stat-card-compact stat-yellow">
                             <div class="stat-header">
                                 <span class="stat-label">Accesos Hoy</span>
                                 <span class="stat-icon">🔓</span>
                             </div>
                             <div class="stat-value" id="stat-access-today">0</div>
-                            <div class="stat-trend">
-                                <span id="stat-access-trend"></span>
-                            </div>
                         </div>
-                        <div class="stat-card stat-blue">
+                        <div class="stat-card stat-card-compact stat-blue">
                             <div class="stat-header">
                                 <span class="stat-label">Tokens Consumidos</span>
                                 <span class="stat-icon">🎟️</span>
                             </div>
                             <div class="stat-value" id="stat-tokens-consumed">0</div>
-                            <div class="stat-trend">
-                                <span id="stat-tokens-trend">Hoy</span>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Recent Events -->
+                    <!-- Token Usage Chart -->
                     <div class="section-card">
                         <div class="section-header">
-                            <h3>Últimos Eventos</h3>
-                            <button class="btn btn-link" onclick="App.navigateTo('logs')">Ver Todo</button>
+                            <h3>Consumo de Tokens</h3>
                         </div>
-                        <div class="events-list" id="recent-events">
-                            <div class="loading-placeholder">Cargando eventos...</div>
+
+                        <!-- Chart Filters -->
+                        <div class="chart-filters">
+                            <div class="chart-filter-group">
+                                <label for="chart-date-start">Desde</label>
+                                <input type="date" id="chart-date-start" class="form-select">
+                            </div>
+                            <div class="chart-filter-group">
+                                <label for="chart-date-end">Hasta</label>
+                                <input type="date" id="chart-date-end" class="form-select">
+                            </div>
+                            <div class="chart-filter-group">
+                                <label>Casa</label>
+                                <div class="multi-select" id="chart-house-select">
+                                    <button type="button" class="multi-select-btn" id="chart-house-btn">Todas</button>
+                                    <div class="multi-select-dropdown hidden" id="chart-house-dropdown"></div>
+                                </div>
+                            </div>
+                            <div class="chart-filter-group">
+                                <label>Tipo Token</label>
+                                <div class="multi-select" id="chart-token-select">
+                                    <button type="button" class="multi-select-btn" id="chart-token-btn">Todos</button>
+                                    <div class="multi-select-dropdown hidden" id="chart-token-dropdown"></div>
+                                </div>
+                            </div>
+                            <div class="chart-filter-group">
+                                <label>Evento</label>
+                                <div class="multi-select" id="chart-event-select">
+                                    <button type="button" class="multi-select-btn" id="chart-event-btn">ACCESS_GRANTED</button>
+                                    <div class="multi-select-dropdown hidden" id="chart-event-dropdown"></div>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Chart Canvas -->
+                        <div class="chart-container">
+                            <canvas id="dashboard-chart"></canvas>
+                        </div>
+
+                        <!-- Chart Legend -->
+                        <div class="chart-legend" id="chart-legend"></div>
                     </div>
                 </section>
 

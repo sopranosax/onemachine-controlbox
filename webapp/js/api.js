@@ -239,6 +239,10 @@ const API = {
         return this.get('getDashboardStats');
     },
 
+    async getChartData(filters = {}) {
+        return this.get('getChartData', filters);
+    },
+
     // ==================== ADMIN LOG ====================
 
     async getAdminLog(filters = {}) {

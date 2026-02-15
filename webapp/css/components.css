@@ -299,6 +299,190 @@
     color: var(--color-danger);
 }
 
+/* ============== COMPACT STAT CARDS ============== */
+.stats-grid-compact {
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.stat-card-compact {
+    padding: 10px 14px;
+}
+
+.stat-card-compact .stat-value {
+    font-size: var(--font-size-2xl);
+    margin-bottom: 0;
+}
+
+.stat-card-compact .stat-header {
+    margin-bottom: 4px;
+}
+
+.stat-card-compact .stat-icon {
+    font-size: 1.2rem;
+}
+
+/* ============== CHART SECTION ============== */
+.chart-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: var(--space-md);
+    align-items: flex-end;
+}
+
+.chart-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chart-filter-group label {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--color-gray-500);
+}
+
+.chart-filter-group input[type="date"] {
+    padding: 6px 10px;
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    background: var(--color-white);
+    color: var(--color-gray-800);
+}
+
+/* Multi-select dropdown */
+.multi-select {
+    position: relative;
+    min-width: 130px;
+}
+
+.multi-select-btn {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    background: var(--color-white);
+    color: var(--color-gray-800);
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.multi-select-btn:hover {
+    border-color: var(--color-gray-400);
+}
+
+.multi-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    min-width: 180px;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 50;
+    padding: 6px 0;
+}
+
+.multi-select-dropdown label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    color: var(--color-gray-700);
+    transition: background var(--transition-fast);
+}
+
+.multi-select-dropdown label:hover {
+    background: var(--color-gray-50);
+}
+
+.multi-select-dropdown input[type="checkbox"] {
+    accent-color: var(--color-primary);
+}
+
+/* Chart container */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    margin-bottom: var(--space-md);
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Chart legend */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-600);
+}
+
+.chart-legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+/* Chart tooltip */
+.chart-tooltip {
+    position: absolute;
+    padding: 8px 12px;
+    background: var(--color-gray-900);
+    color: var(--color-white);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-xs);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 60;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.chart-tooltip.visible {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .chart-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .chart-filter-group {
+        width: 100%;
+    }
+    .multi-select {
+        min-width: 100%;
+    }
+    .chart-container {
+        height: 260px;
+    }
+}
+
 /* ============== SECTION CARD ============== */
 .section-card {
     background-color: var(--color-white);

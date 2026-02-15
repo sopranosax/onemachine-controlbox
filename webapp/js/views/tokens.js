@@ -97,8 +97,8 @@ const TokenTypes = {
                 </thead>
                 <tbody>
                     ${this.tokenTypes.map(t => `
-                        <tr>
-                            <td><strong>${Utils.escapeHtml(t.token_type)}</strong></td>
+                            <tr>
+                            <td><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${t.token_type_color || '#6366F1'};vertical-align:middle;margin-right:6px;"></span><strong>${Utils.escapeHtml(t.token_type)}</strong></td>
                             <td>${Utils.escapeHtml(t.token_name)}</td>
                             <td>${Utils.escapeHtml(t.description || '-')}</td>
                             <td>${t.reset_value || 0}</td>
@@ -201,6 +201,10 @@ const TokenTypes = {
                         <label for="new-token-reset-time">Reset Time</label>
                         <input type="time" id="new-token-reset-time" value="08:00">
                     </div>
+                    <div class="form-group">
+                        <label for="new-token-color">Color</label>
+                        <input type="color" id="new-token-color" value="#6366F1">
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Crear Token</button>
@@ -219,6 +223,7 @@ const TokenTypes = {
             const resetValue = parseInt(document.getElementById('new-token-reset-value').value) || 0;
             const resetDate = document.getElementById('new-token-reset-date').value;
             const resetTime = document.getElementById('new-token-reset-time').value || '08:00';
+            const tokenColor = document.getElementById('new-token-color').value || '#6366F1';
 
             if (!tokenType || !tokenName) {
                 Utils.showToast('Código y nombre son requeridos', 'error');
@@ -233,7 +238,8 @@ const TokenTypes = {
                     status: status,
                     reset_value: resetValue,
                     reset_date: resetDate,
-                    reset_time: resetTime
+                    reset_time: resetTime,
+                    token_type_color: tokenColor
                 });
 
                 if (response.success) {
@@ -287,6 +293,10 @@ const TokenTypes = {
                         <label for="edit-token-reset-time">Reset Time</label>
                         <input type="time" id="edit-token-reset-time" value="${token.reset_time || '08:00'}">
                     </div>
+                    <div class="form-group">
+                        <label for="edit-token-color">Color</label>
+                        <input type="color" id="edit-token-color" value="${token.token_type_color || '#6366F1'}">
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -303,6 +313,7 @@ const TokenTypes = {
             const resetValue = parseInt(document.getElementById('edit-token-reset-value').value) || 0;
             const resetDate = document.getElementById('edit-token-reset-date').value;
             const resetTime = document.getElementById('edit-token-reset-time').value || '08:00';
+            const tokenColor = document.getElementById('edit-token-color').value || '#6366F1';
 
             try {
                 const response = await API.updateTokenType(tokenType, {
@@ -310,7 +321,8 @@ const TokenTypes = {
                     description: description,
                     reset_value: resetValue,
                     reset_date: resetDate,
-                    reset_time: resetTime
+                    reset_time: resetTime,
+                    token_type_color: tokenColor
                 });
 
                 if (response.success) {
