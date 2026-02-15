@@ -172,6 +172,9 @@ const Dashboard = {
 
     // ==================== LOAD CHART DATA ====================
     async loadChartData() {
+        // Clear the previous chart immediately so the user sees a visual reset
+        this.clearChart();
+
         try {
             const filters = {
                 start_date: this.startDate,
@@ -183,19 +186,64 @@ const Dashboard = {
             if (this.selectedTokenTypes.length > 0) {
                 filters.token_types = this.selectedTokenTypes.join(',');
             }
-            if (this.selectedEventTypes.length > 0) {
-                filters.event_types = this.selectedEventTypes.join(',');
-            }
+            // Always send event_types explicitly — when empty (all selected),
+            // send ALL types so the backend doesn't default to ACCESS_GRANTED only
+            const eventTypes = this.selectedEventTypes.length > 0
+                ? this.selectedEventTypes
+                : this.EVENT_TYPES;
+            filters.event_types = eventTypes.join(',');
 
             const response = await API.getChartData(filters);
             if (response.success) {
                 this.chartData = response.chart_data || [];
                 this.renderChart();
                 this.renderLegend();
+                this.renderFilterSummary();
             }
         } catch (error) {
             console.error('Error loading chart data:', error);
         }
+    },
+
+    clearChart() {
+        const canvas = document.getElementById('dashboard-chart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+        this._barHitAreas = [];
+        const legendEl = document.getElementById('chart-legend');
+        if (legendEl) legendEl.innerHTML = '';
+    },
+
+    // ==================== ACTIVE FILTER SUMMARY ====================
+    renderFilterSummary() {
+        const el = document.getElementById('chart-filter-summary');
+        if (!el) return;
+
+        const groups = [];
+
+        // Houses summary — only show when subset is selected
+        const activeHouses = this.selectedHouses.length > 0
+            ? this.selectedHouses
+            : null;
+        if (activeHouses) {
+            const tags = activeHouses.map(h =>
+                `<span class="filter-tag">${Utils.escapeHtml(h)}</span>`).join('');
+            groups.push(`<div class="filter-tag-group"><span class="filter-tag-label">Casa:</span>${tags}</div>`);
+        }
+
+        // Event types summary — only show when subset is selected
+        const activeEvents = this.selectedEventTypes.length > 0
+            ? this.selectedEventTypes
+            : null;
+        if (activeEvents) {
+            const tags = activeEvents.map(e =>
+                `<span class="filter-tag">${Utils.escapeHtml(Utils.getEventTypeName(e))}</span>`).join('');
+            groups.push(`<div class="filter-tag-group"><span class="filter-tag-label">Eventos:</span>${tags}</div>`);
+        }
+
+        el.innerHTML = groups.join('<div class="filter-tag-separator"></div>');
     },
 
     // ==================== CHART RENDERING ====================
