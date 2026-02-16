@@ -260,6 +260,16 @@ const Dashboard = {
             groups.push(`<div class="filter-tag-group"><span class="filter-tag-label">Casa:</span>${tags}</div>`);
         }
 
+        // Token types summary — only show when subset is selected
+        const activeTokens = this.selectedTokenTypes.length > 0
+            ? this.selectedTokenTypes
+            : null;
+        if (activeTokens) {
+            const tags = activeTokens.map(t =>
+                `<span class="filter-tag">${Utils.escapeHtml(t)}</span>`).join('');
+            groups.push(`<div class="filter-tag-group"><span class="filter-tag-label">Token:</span>${tags}</div>`);
+        }
+
         // Event types summary — only show when subset is selected
         const activeEvents = this.selectedEventTypes.length > 0
             ? this.selectedEventTypes
