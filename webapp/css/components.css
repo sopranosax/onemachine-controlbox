@@ -331,10 +331,17 @@
     align-items: flex-end;
 }
 
+.chart-filter-group .btn,
+.chart-filter-group .form-select,
+.form-select {
+    height: 36px;
+    box-sizing: border-box;
+}
+
 /* Filter reset button — subtle ghost style */
 .btn-reset-filters {
     padding: 6px 12px;
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--color-gray-400);
     background: none;
@@ -343,6 +350,8 @@
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
+    height: 36px;
+    box-sizing: border-box;
 }
 
 .btn-reset-filters:hover {
@@ -370,6 +379,8 @@
     border-radius: var(--radius-md);
     background: var(--color-white);
     color: var(--color-gray-800);
+    height: 36px;
+    box-sizing: border-box;
 }
 
 /* Multi-select dropdown */
@@ -391,6 +402,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    height: 36px;
+    box-sizing: border-box;
 }
 
 .multi-select-btn:hover {
