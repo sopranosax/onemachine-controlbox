@@ -331,6 +331,26 @@
     align-items: flex-end;
 }
 
+/* Filter reset button — subtle ghost style */
+.btn-reset-filters {
+    padding: 6px 12px;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--color-gray-400);
+    background: none;
+    border: 1px dashed var(--color-gray-300);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.btn-reset-filters:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background: rgba(99, 102, 241, 0.04);
+}
+
 .chart-filter-group {
     display: flex;
     flex-direction: column;

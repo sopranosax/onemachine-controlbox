@@ -162,12 +162,39 @@ const Dashboard = {
         const refreshBtn = document.getElementById('btn-refresh-chart');
         if (refreshBtn) refreshBtn.onclick = () => this.loadChartData();
 
+        // Reset button returns filters to defaults
+        const resetBtn = document.getElementById('btn-reset-chart-filters');
+        if (resetBtn) resetBtn.onclick = () => this.resetFilters();
+
         // Close dropdowns when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.multi-select')) {
                 document.querySelectorAll('.multi-select-dropdown').forEach(d => d.classList.add('hidden'));
             }
         });
+    },
+
+    resetFilters() {
+        // Reset state to defaults
+        this.selectedHouses = [];
+        this.selectedTokenTypes = [];
+        this.selectedEventTypes = ['ACCESS_GRANTED'];
+
+        // Reset date inputs
+        this.initFilterDefaults();
+
+        // Rebuild multi-selects with default selections
+        this.buildMultiSelect('chart-house', this.houses.map(h => h.house_id), this.selectedHouses, 'Todas');
+        this.buildMultiSelect('chart-token', this.tokenTypes.map(t => t.token_type), this.selectedTokenTypes, 'Todos');
+        this.buildMultiSelect('chart-event', this.EVENT_TYPES, this.selectedEventTypes, 'Evento', v => Utils.getEventTypeName(v));
+
+        // Clear chart and summary
+        this.clearChart();
+        const summary = document.getElementById('chart-filter-summary');
+        if (summary) summary.innerHTML = '';
+
+        // Auto-refresh with defaults
+        this.loadChartData();
     },
 
     // ==================== LOAD CHART DATA ====================

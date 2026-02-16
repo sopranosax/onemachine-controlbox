@@ -141,6 +141,20 @@ const Logs = {
         const searchBtn = document.getElementById('btn-search-logs');
         if (searchBtn) searchBtn.onclick = () => this.applyFilters();
 
+        // Reset button returns filters to defaults
+        const resetBtn = document.getElementById('btn-reset-logs-filters');
+        if (resetBtn) {
+            resetBtn.onclick = () => {
+                this.selectedHouses = [];
+                this.selectedDevices = [];
+                this.selectedTokenTypes = [];
+                this.selectedEventTypes = [];
+                this.initFilters();
+                this.buildMultiSelects();
+                this.applyFilters();
+            };
+        }
+
         // Close dropdowns when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.multi-select')) {

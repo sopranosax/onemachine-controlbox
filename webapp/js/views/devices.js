@@ -45,6 +45,17 @@ const Devices = {
                 el.onchange = () => this.renderDevices();
             }
         });
+
+        const resetBtn = document.getElementById('btn-reset-devices-filters');
+        if (resetBtn) {
+            resetBtn.onclick = () => {
+                filters.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                this.renderDevices();
+            };
+        }
     },
 
     /**

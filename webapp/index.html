@@ -195,6 +195,10 @@
                                 <button type="button" class="btn btn-primary" id="btn-refresh-chart">📊 Actualizar
                                     Gráfico</button>
                             </div>
+                            <div class="chart-filter-group" style="align-self:flex-end;">
+                                <button type="button" class="btn-reset-filters" id="btn-reset-chart-filters">↺
+                                    Reset</button>
+                            </div>
                         </div>
 
                         <!-- Active Filter Summary -->
@@ -246,6 +250,10 @@
                                 <option value="asc">A → Z</option>
                                 <option value="desc">Z → A</option>
                             </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="btn-reset-filters" id="btn-reset-users-filters">↺
+                                Reset</button>
                         </div>
                     </div>
                     <div class="table-container">
@@ -316,9 +324,11 @@
                                 <option value="OFFLINE">OFFLINE</option>
                             </select>
                         </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="btn-reset-filters" id="btn-reset-devices-filters">↺
+                                Reset</button>
+                        </div>
                     </div>
-
-                    <!-- Devices Table -->
                     <div class="table-container">
                         <table class="data-table" id="devices-table">
                             <thead>
@@ -402,6 +412,9 @@
                         </div>
                         <div class="chart-filter-group" style="align-self:flex-end;">
                             <button type="button" class="btn btn-primary" id="btn-search-logs">🔍 Buscar</button>
+                        </div>
+                        <div class="chart-filter-group" style="align-self:flex-end;">
+                            <button type="button" class="btn-reset-filters" id="btn-reset-logs-filters">↺ Reset</button>
                         </div>
                     </div>
 

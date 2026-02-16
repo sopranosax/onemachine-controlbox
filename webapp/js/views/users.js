@@ -53,6 +53,20 @@ const Users = {
                 this.renderUsers(this.getFilteredUsers());
             };
         }
+
+        const resetBtn = document.getElementById('btn-reset-users-filters');
+        if (resetBtn) {
+            resetBtn.onclick = () => {
+                this.searchTerm = '';
+                this.filterStatus = '';
+                this.sortName = '';
+                const si = document.getElementById('users-search');
+                if (si) si.value = '';
+                if (statusFilter) statusFilter.value = '';
+                if (sortName) sortName.value = '';
+                this.renderUsers(this.getFilteredUsers());
+            };
+        }
     },
 
     /**
