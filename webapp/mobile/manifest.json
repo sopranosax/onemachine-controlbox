@@ -1,0 +1,17 @@
+{
+  "name": "CtrlBx Admin",
+  "short_name": "CtrlBx",
+  "description": "Panel de administración móvil para el sistema de control de acceso IoT CtrlBx",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f7",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "icons/OneMachineCtrlBx_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
