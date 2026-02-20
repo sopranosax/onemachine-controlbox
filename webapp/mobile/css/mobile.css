@@ -178,15 +178,15 @@ body {
 .login-view {
     justify-content: center;
     align-items: center;
-    padding: 40px 24px;
-    gap: 32px;
+    padding: 24px 24px;
+    gap: 12px;
     min-height: 100dvh;
     background: #fff;
 }
 
 .login-logo {
-    width: 200px;
-    height: 200px;
+    width: 140px;
+    height: 140px;
     object-fit: contain;
 }
 
@@ -200,7 +200,6 @@ body {
     color: var(--text-sec);
     text-align: center;
     font-size: .9rem;
-    margin-top: -16px;
 }
 
 .login-form {
