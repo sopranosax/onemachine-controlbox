@@ -24,6 +24,7 @@ const API = {
     validateAdmin(email) { return this.get('validateAdmin', { email }); },
 
     // Data
+    getAdminHouses(email) { return this.get('getAdminHouses', { email }); },
     getHouses() { return this.get('getHouses'); },
     getUsers() { return this.get('getUsers'); },
     getTokenTypes() { return this.get('getTokenTypes'); },
@@ -32,6 +33,6 @@ const API = {
 
     // Token balance
     updateTokenBalance(uid, tokenType, delta) {
-        return this.post('updateTokenBalance', { uid, token_type: tokenType, delta });
+        return this.post('updateTokenBalance', { uid, token_type: tokenType, delta: Number(delta) });
     }
 };

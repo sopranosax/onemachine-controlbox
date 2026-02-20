@@ -127,14 +127,33 @@ const App = {
     },
 
     // ═══════════════════════ DATA LOADING ═══════════════════════
+    allowedHouseIds: null, // null = all (MASTER), Set = filtered (ADMIN)
+
     async loadData() {
         const el = document.getElementById('content-users');
         el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
         try {
-            const [hRes, uRes, tRes] = await Promise.all([
-                API.getHouses(), API.getUsers(), API.getTokenTypes()
-            ]);
-            this.houses = (hRes.houses || []).sort((a, b) => a.house_id.localeCompare(b.house_id));
+            const fetches = [API.getHouses(), API.getUsers(), API.getTokenTypes()];
+
+            // ADMIN role: also fetch their allowed houses
+            if (this.user.role !== 'MASTER') {
+                fetches.push(API.getAdminHouses(this.user.email));
+            }
+
+            const [hRes, uRes, tRes, ahRes] = await Promise.all(fetches);
+
+            // Build allowed house set for ADMIN
+            if (this.user.role !== 'MASTER' && ahRes && ahRes.admin_houses) {
+                this.allowedHouseIds = new Set(ahRes.admin_houses.map(ah => ah.house_id));
+            } else {
+                this.allowedHouseIds = null; // MASTER sees all
+            }
+
+            let houses = (hRes.houses || []).sort((a, b) => a.house_id.localeCompare(b.house_id));
+            if (this.allowedHouseIds) {
+                houses = houses.filter(h => this.allowedHouseIds.has(h.house_id));
+            }
+            this.houses = houses;
             this.users = uRes.users || [];
             this.tokenTypes = (tRes.token_types || []).filter(t => t.status === 'ACTIVO');
             this.renderHouses();
@@ -151,8 +170,14 @@ const App = {
                 API.getLogs({ limit: 200 }),
                 this.devices.length ? Promise.resolve({ devices: this.devices }) : API.getDevices()
             ]);
-            this.logs = logRes.logs || [];
+            let logs = logRes.logs || [];
             this.devices = devRes.devices || [];
+
+            // ADMIN: filter logs to only allowed houses
+            if (this.allowedHouseIds) {
+                logs = logs.filter(l => this.allowedHouseIds.has(l.house_id));
+            }
+            this.logs = logs;
             this.renderLogs();
         } catch (err) {
             el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error al cargar registros</div></div>';
