@@ -12,6 +12,7 @@ const Users = {
     searchTerm: '',
     filterStatus: '',     // '' | 'ACTIVO' | 'INACTIVO'
     sortName: '',         // '' | 'asc' | 'desc'
+    selectedHouseFilter: [],  // multi-select house filter
 
     async load() {
         if (!Auth.can('users.view')) {
@@ -22,6 +23,7 @@ const Users = {
         this.renderLoadingState();
         await this.loadTokenTypes();
         await this.loadUsers();
+        this.buildHouseFilter();
         this.bindEvents();
     },
 
@@ -60,13 +62,22 @@ const Users = {
                 this.searchTerm = '';
                 this.filterStatus = '';
                 this.sortName = '';
+                this.selectedHouseFilter = [];
                 const si = document.getElementById('users-search');
                 if (si) si.value = '';
                 if (statusFilter) statusFilter.value = '';
                 if (sortName) sortName.value = '';
+                this.buildHouseFilter();
                 this.renderUsers(this.getFilteredUsers());
             };
         }
+
+        // Close multi-select dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.multi-select')) {
+                document.querySelectorAll('#page-users .multi-select-dropdown').forEach(d => d.classList.add('hidden'));
+            }
+        });
     },
 
     /**
@@ -105,6 +116,50 @@ const Users = {
     },
 
     /**
+     * Build multi-select house filter dropdown
+     */
+    buildHouseFilter() {
+        const btn = document.getElementById('users-filter-house-btn');
+        const dropdown = document.getElementById('users-filter-house-dropdown');
+        if (!btn || !dropdown) return;
+
+        const sorted = [...this.houses].sort((a, b) => a.house_id.localeCompare(b.house_id));
+        const options = sorted.map(h => h.house_id);
+
+        dropdown.innerHTML = options.map(opt => {
+            const checked = this.selectedHouseFilter.length === 0 ? 'checked' : (this.selectedHouseFilter.includes(opt) ? 'checked' : '');
+            return `<label><input type="checkbox" value="${Utils.escapeHtml(opt)}" ${checked}> ${Utils.escapeHtml(opt)}</label>`;
+        }).join('');
+
+        const updateLabel = () => {
+            const checked = Array.from(dropdown.querySelectorAll('input:checked')).map(cb => cb.value);
+            if (checked.length === 0 || checked.length === options.length) {
+                btn.textContent = 'Todas';
+            } else if (checked.length === 1) {
+                btn.textContent = checked[0];
+            } else {
+                btn.textContent = `${checked.length} sel.`;
+            }
+        };
+        updateLabel();
+
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('#page-users .multi-select-dropdown').forEach(d => {
+                if (d !== dropdown) d.classList.add('hidden');
+            });
+            dropdown.classList.toggle('hidden');
+        };
+
+        dropdown.addEventListener('change', () => {
+            updateLabel();
+            const checked = Array.from(dropdown.querySelectorAll('input:checked')).map(cb => cb.value);
+            this.selectedHouseFilter = checked.length === options.length ? [] : checked;
+            this.renderUsers(this.getFilteredUsers());
+        });
+    },
+
+    /**
      * Render loading state
      */
     renderLoadingState() {
@@ -131,6 +186,11 @@ const Users = {
                 user.user_name.toLowerCase().includes(this.searchTerm) ||
                 user.uid.toLowerCase().includes(this.searchTerm)
             );
+        }
+
+        // House filter (multi-select)
+        if (this.selectedHouseFilter.length > 0) {
+            filtered = filtered.filter(user => this.selectedHouseFilter.includes(user.user_residence));
         }
 
         // Status filter
@@ -164,7 +224,7 @@ const Users = {
         if (!users || users.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="empty-state">
                             <div class="empty-state-icon">👥</div>
                             <p class="empty-state-title">No se encontraron usuarios</p>
@@ -206,10 +266,13 @@ const Users = {
                 })
                 .join(', ') || '-';
 
+            const residenceDisplay = user.user_residence ? Utils.escapeHtml(user.user_residence) : '<span style="color:var(--text-secondary);">—</span>';
+
             return `
                 <tr>
                     <td><code>${Utils.escapeHtml(user.uid)}</code></td>
                     <td>${Utils.escapeHtml(user.user_name)}</td>
+                    <td>${residenceDisplay}</td>
                     <td><span class="badge ${statusClass}">${user.status}</span></td>
                     <td><span class="status-badge ${typeBadgeClass}" style="font-size:0.8rem;">${typeLabel}</span></td>
                     <td>${tokenDisplay}</td>
@@ -272,6 +335,12 @@ const Users = {
             `;
         }
 
+        // Build residence info
+        const residenceHouse = user.user_residence ? this.houses.find(h => h.house_id === user.user_residence) : null;
+        const residenceLabel = user.user_residence
+            ? `🏠 ${Utils.escapeHtml(user.user_residence)}${residenceHouse ? ` — ${Utils.escapeHtml([residenceHouse.house_street, residenceHouse.house_number].filter(Boolean).join(' '))}` : ''}`
+            : '<span style="color:var(--text-secondary);">Sin asignar</span>';
+
         Utils.showModal({
             title: 'Detalle de Usuario',
             content: `
@@ -287,6 +356,11 @@ const Users = {
                     <div class="section-card">
                         <h4>Estado</h4>
                         <span class="badge ${user.status === 'ACTIVO' ? 'badge-success' : 'badge-danger'}">${user.status}</span>
+                    </div>
+
+                    <div class="section-card">
+                        <h4>Casa de Residencia</h4>
+                        ${residenceLabel}
                     </div>
 
                     <div class="section-card">
@@ -334,10 +408,24 @@ const Users = {
     },
 
     /**
+     * Build residence house select options
+     */
+    buildResidenceOptions(selectedHouseId = '') {
+        const sorted = [...this.houses].sort((a, b) => a.house_id.localeCompare(b.house_id));
+        const options = sorted.map(h => {
+            const addr = [h.house_street, h.house_number].filter(Boolean).join(' ');
+            const label = addr ? `${h.house_id} — ${addr}` : h.house_id;
+            return `<option value="${Utils.escapeHtml(h.house_id)}" ${h.house_id === selectedHouseId ? 'selected' : ''}>${Utils.escapeHtml(label)}</option>`;
+        }).join('');
+        return `<option value="">— Sin asignar —</option>${options}`;
+    },
+
+    /**
      * Show add user modal
      */
     showAddUserModal() {
         const houseCbs = this.buildHouseCheckboxes('new-user-houses');
+        const residenceOpts = this.buildResidenceOptions();
 
         Utils.showModal({
             title: 'Nuevo Usuario',
@@ -350,6 +438,12 @@ const Users = {
                     <div class="form-group">
                         <label for="new-user-name">Nombre del Usuario *</label>
                         <input type="text" id="new-user-name" required placeholder="Nombre completo">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-user-residence">Casa de Residencia</label>
+                        <select id="new-user-residence" class="form-select">
+                            ${residenceOpts}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="new-user-type">Tipo de Usuario</label>
@@ -377,6 +471,7 @@ const Users = {
             const uid = document.getElementById('new-user-uid').value.trim();
             const name = document.getElementById('new-user-name').value.trim();
             const userType = document.getElementById('new-user-type').value;
+            const userResidence = document.getElementById('new-user-residence').value;
 
             if (!uid || !name) {
                 Utils.showToast('Complete todos los campos', 'error');
@@ -389,7 +484,7 @@ const Users = {
                 : [];
 
             try {
-                await API.createUser({ uid, user_name: name, status: 'ACTIVO', user_type: userType });
+                await API.createUser({ uid, user_name: name, status: 'ACTIVO', user_type: userType, user_residence: userResidence });
                 if (userType === 'HOUSE' && selectedHouses.length > 0) {
                     await API.assignUserHouses(uid, selectedHouses);
                 }
@@ -423,6 +518,7 @@ const Users = {
         const userType = user.user_type || 'GLOBAL';
         const userHouseIds = this.getHousesForUser(uid);
         const houseCbs = this.buildHouseCheckboxes('edit-user-houses', userHouseIds);
+        const residenceOpts = this.buildResidenceOptions(user.user_residence || '');
 
         Utils.showModal({
             title: 'Editar Usuario',
@@ -435,6 +531,12 @@ const Users = {
                     <div class="form-group">
                         <label for="edit-user-name">Nombre del Usuario *</label>
                         <input type="text" id="edit-user-name" value="${Utils.escapeHtml(user.user_name)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-user-residence">Casa de Residencia</label>
+                        <select id="edit-user-residence" class="form-select">
+                            ${residenceOpts}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="edit-user-type">Tipo de Usuario</label>
@@ -461,6 +563,7 @@ const Users = {
             e.preventDefault();
             const name = document.getElementById('edit-user-name').value.trim();
             const newType = document.getElementById('edit-user-type').value;
+            const newResidence = document.getElementById('edit-user-residence').value;
 
             if (!name) {
                 Utils.showToast('El nombre es requerido', 'error');
@@ -473,7 +576,7 @@ const Users = {
                 : [];
 
             try {
-                await API.updateUser(uid, { user_name: name, user_type: newType });
+                await API.updateUser(uid, { user_name: name, user_type: newType, user_residence: newResidence });
                 await API.assignUserHouses(uid, selectedHouses);
                 Utils.closeModal();
                 Utils.showToast('Usuario actualizado', 'success');

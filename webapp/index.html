@@ -232,6 +232,14 @@
                     <!-- Filters -->
                     <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
                         <div style="display:flex;align-items:center;gap:6px;">
+                            <label
+                                style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Casa:</label>
+                            <div class="multi-select">
+                                <button type="button" class="multi-select-btn" id="users-filter-house-btn">Todas</button>
+                                <div class="multi-select-dropdown hidden" id="users-filter-house-dropdown"></div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
                             <label for="users-filter-status"
                                 style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Estado:</label>
                             <select id="users-filter-status" class="form-select"
@@ -262,6 +270,7 @@
                                 <tr>
                                     <th>UID</th>
                                     <th>Nombre</th>
+                                    <th>Casa</th>
                                     <th>Estado</th>
                                     <th>Tipo</th>
                                     <th>Tokens</th>
@@ -270,7 +279,7 @@
                             </thead>
                             <tbody id="users-tbody">
                                 <tr>
-                                    <td colspan="6" class="loading-placeholder">Cargando usuarios...</td>
+                                    <td colspan="7" class="loading-placeholder">Cargando usuarios...</td>
                                 </tr>
                             </tbody>
                         </table>
