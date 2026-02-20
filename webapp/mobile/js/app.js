@@ -244,27 +244,39 @@ const App = {
     },
 
     // ═══════════════════════ TOKEN EDITOR VIEW ═══════════════════════
+    // Stores the original balances snapshot when entering the editor
+    editorOriginal: {},   // { tokenType: originalBalance }
+    editorCurrent: {},    // { tokenType: currentBalance  }
+
     renderTokenEditor() {
         this.usersSubView = 'editor';
         this.updateHeader('Ajustar Tokens', true);
         const el = document.getElementById('content-users');
         const u = this.selectedUser;
 
+        // Snapshot original balances
+        this.editorOriginal = {};
+        this.editorCurrent = {};
+        this.tokenTypes.forEach(tt => {
+            const bal = (u.tokens && u.tokens[tt.token_type] != null) ? Number(u.tokens[tt.token_type]) : 0;
+            this.editorOriginal[tt.token_type] = bal;
+            this.editorCurrent[tt.token_type] = bal;
+        });
+
         const cards = this.tokenTypes.map(tt => {
-            const balance = (u.tokens && u.tokens[tt.token_type] != null) ? u.tokens[tt.token_type] : 0;
+            const balance = this.editorOriginal[tt.token_type];
             const color = tt.token_type_color || '#6366f1';
-            const inactiveTag = tt.status === 'INACTIVO' ? '<span class="token-inactive-tag">INACTIVO</span>' : '';
             return `
                 <div class="token-editor-card" id="te-${this.esc(tt.token_type)}">
                     <span class="token-editor-dot" style="background:${color}"></span>
                     <div class="token-editor-info">
-                        <div class="token-editor-type">${this.esc(tt.token_type)} ${inactiveTag}</div>
+                        <div class="token-editor-type">${this.esc(tt.token_type)}</div>
                         <div class="token-editor-desc">${this.esc(tt.description || tt.token_name || '')}</div>
                     </div>
                     <div class="token-editor-controls">
-                        <button onclick="App.adjustToken('${this.esc(u.uid)}','${this.esc(tt.token_type)}',-1)">−</button>
+                        <button onclick="App.adjustToken('${this.esc(tt.token_type)}',-1)">−</button>
                         <div class="token-editor-balance" id="bal-${this.esc(tt.token_type)}">${balance}</div>
-                        <button onclick="App.adjustToken('${this.esc(u.uid)}','${this.esc(tt.token_type)}',1)">+</button>
+                        <button onclick="App.adjustToken('${this.esc(tt.token_type)}',1)">+</button>
                     </div>
                 </div>
             `;
@@ -277,35 +289,74 @@ const App = {
                 <div class="editor-uid">${this.esc(u.uid)}</div>
             </div>
             ${cards || '<div class="empty-state"><div class="empty-icon">🎟️</div><div class="empty-title">Sin tipos de token activos</div></div>'}
+            <div class="editor-actions">
+                <button class="btn-cancel" onclick="App.cancelEditor()">Cancelar</button>
+                <button class="btn-save" id="btn-save-tokens" onclick="App.saveTokens()">Actualizar</button>
+            </div>
         `;
     },
 
-    async adjustToken(uid, tokenType, delta) {
+    /** Locally adjust a token balance (no API call) */
+    adjustToken(tokenType, delta) {
         const balEl = document.getElementById(`bal-${tokenType}`);
         if (!balEl) return;
-        const current = parseInt(balEl.textContent, 10) || 0;
-        if (current + delta < 0) {
+        const current = this.editorCurrent[tokenType] ?? 0;
+        const next = current + delta;
+        if (next < 0) {
             this.toast('El balance no puede ser negativo', 'warning');
             return;
         }
+        this.editorCurrent[tokenType] = next;
+        balEl.textContent = next;
 
-        // Optimistic update
-        balEl.textContent = current + delta;
+        // Highlight changed values
+        const orig = this.editorOriginal[tokenType] ?? 0;
+        balEl.classList.toggle('balance-changed', next !== orig);
+    },
+
+    /** Cancelar — revert all values and go back to user list */
+    cancelEditor() {
+        this.renderUserList();
+    },
+
+    /** Actualizar — send only changed balances to backend */
+    async saveTokens() {
+        const u = this.selectedUser;
+        if (!u) return;
+
+        // Compute deltas for changed token types
+        const changes = [];
+        for (const tt of this.tokenTypes) {
+            const orig = this.editorOriginal[tt.token_type] ?? 0;
+            const curr = this.editorCurrent[tt.token_type] ?? 0;
+            const delta = curr - orig;
+            if (delta !== 0) {
+                changes.push({ token_type: tt.token_type, delta });
+            }
+        }
+
+        if (!changes.length) {
+            this.toast('Sin cambios', 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('btn-save-tokens');
+        if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
 
         try {
-            const res = await API.updateTokenBalance(uid, tokenType, delta);
-            if (!res.success) throw new Error(res.error || 'Error');
-            // Update local state
-            const user = this.users.find(u => u.uid === uid);
-            if (user) {
-                if (!user.tokens) user.tokens = {};
-                user.tokens[tokenType] = res.new_balance;
+            // Send each changed balance sequentially
+            for (const ch of changes) {
+                const res = await API.updateTokenBalance(u.uid, ch.token_type, ch.delta);
+                if (!res.success) throw new Error(res.error || `Error en ${ch.token_type}`);
+                // Update local user state with confirmed backend value
+                if (!u.tokens) u.tokens = {};
+                u.tokens[ch.token_type] = res.new_balance;
             }
-            balEl.textContent = res.new_balance;
+            this.toast('Balances actualizados ✓');
+            this.renderUserList();
         } catch (err) {
-            // Revert on error
-            balEl.textContent = current;
-            this.toast('Error al actualizar balance', 'error');
+            this.toast(err.message || 'Error al guardar', 'error');
+            if (btn) { btn.disabled = false; btn.textContent = 'Actualizar'; }
         }
     },
 
