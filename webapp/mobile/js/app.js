@@ -87,14 +87,14 @@ const App = {
             <div id="view-users" class="view active">
                 <header class="app-header" id="header-users">
                     <h1 id="header-title">Casas</h1>
-                    <button class="logout-btn" onclick="App.logout()" title="Cerrar sesión">⏻</button>
+                    <button class="logout-btn" onclick="App.logout()" title="Cerrar sesión">Salir</button>
                 </header>
                 <div class="view-content" id="content-users"></div>
             </div>
             <div id="view-logs" class="view">
                 <header class="app-header">
                     <h1>Registro de Eventos</h1>
-                    <button class="logout-btn" onclick="App.logout()" title="Cerrar sesión">⏻</button>
+                    <button class="logout-btn" onclick="App.logout()" title="Cerrar sesión">Salir</button>
                 </header>
                 <div class="view-content" id="content-logs"></div>
             </div>

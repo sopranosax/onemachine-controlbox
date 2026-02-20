@@ -1,6 +1,6 @@
 /* ============================================================
    Admin Mobile App — Styles
-   Mobile-first dark theme, touch-optimised
+   Mobile-first LIGHT theme, touch-optimised
    ============================================================ */
 
 /* ---------- Reset & Variables ---------- */
@@ -13,13 +13,13 @@
 }
 
 :root {
-    --bg: #0f1117;
-    --bg-card: #1a1d27;
-    --bg-card-hover: #222636;
-    --bg-input: #252836;
-    --border: #2d3148;
-    --text: #e8eaf0;
-    --text-sec: #8b8fa7;
+    --bg: #f5f5f7;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f0f0f3;
+    --bg-input: #eeeef0;
+    --border: #d8d8dc;
+    --text: #1c1c1e;
+    --text-sec: #6e6e73;
     --accent: #6366f1;
     --accent-hover: #818cf8;
     --success: #22c55e;
@@ -30,6 +30,7 @@
     --tab-h: 60px;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .04);
 }
 
 html {
@@ -96,6 +97,7 @@ body {
     font-size: 1.1rem;
     cursor: pointer;
     transition: background .15s;
+    box-shadow: var(--shadow-card);
 }
 
 .app-header .back-btn:active {
@@ -103,17 +105,24 @@ body {
 }
 
 .app-header .logout-btn {
-    width: 36px;
-    height: 36px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 4px;
     border: none;
-    background: transparent;
-    color: var(--text-sec);
+    background: var(--bg-card);
+    color: var(--danger);
     border-radius: 10px;
-    font-size: 1.1rem;
+    font-size: .78rem;
+    font-weight: 600;
     cursor: pointer;
+    padding: 6px 12px;
+    box-shadow: var(--shadow-card);
+    font-family: var(--font);
+    transition: background .15s;
+}
+
+.app-header .logout-btn:active {
+    background: var(--bg-card-hover);
 }
 
 /* ---------- Bottom Tabs ---------- */
@@ -130,6 +139,7 @@ body {
     z-index: 100;
     max-width: 480px;
     margin: 0 auto;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, .06);
 }
 
 .tab-bar button {
@@ -171,6 +181,7 @@ body {
     padding: 40px 24px;
     gap: 32px;
     min-height: 100dvh;
+    background: #fff;
 }
 
 .login-icon {
@@ -262,6 +273,7 @@ body {
     overflow: hidden;
     cursor: pointer;
     transition: transform .12s, border-color .15s;
+    box-shadow: var(--shadow-card);
 }
 
 .house-card:active {
@@ -321,6 +333,7 @@ body {
     margin-bottom: 10px;
     cursor: pointer;
     transition: transform .12s, border-color .15s;
+    box-shadow: var(--shadow-card);
 }
 
 .user-card:active {
@@ -394,12 +407,12 @@ body {
 }
 
 .status-activo {
-    background: rgba(34, 197, 94, .15);
-    color: var(--success);
+    background: rgba(34, 197, 94, .12);
+    color: #16a34a;
 }
 
 .status-inactivo {
-    background: rgba(239, 68, 68, .15);
+    background: rgba(239, 68, 68, .12);
     color: var(--danger);
 }
 
@@ -435,6 +448,7 @@ body {
     display: flex;
     align-items: center;
     gap: 14px;
+    box-shadow: var(--shadow-card);
 }
 
 .token-editor-dot {
@@ -498,7 +512,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg);
+    background: #fff;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     font-weight: 700;
@@ -535,7 +549,7 @@ body {
 }
 
 .btn-cancel:active {
-    background: var(--bg-card);
+    background: var(--bg-card-hover);
 }
 
 .btn-save {
@@ -574,6 +588,7 @@ body {
     border-radius: var(--radius);
     padding: 12px 14px;
     margin-bottom: 8px;
+    box-shadow: var(--shadow-card);
 }
 
 .log-card-top {
@@ -596,22 +611,22 @@ body {
 }
 
 .log-badge-success {
-    background: rgba(34, 197, 94, .15);
-    color: var(--success);
+    background: rgba(34, 197, 94, .12);
+    color: #16a34a;
 }
 
 .log-badge-danger {
-    background: rgba(239, 68, 68, .15);
+    background: rgba(239, 68, 68, .12);
     color: var(--danger);
 }
 
 .log-badge-warning {
-    background: rgba(245, 158, 11, .15);
-    color: var(--warning);
+    background: rgba(245, 158, 11, .12);
+    color: #d97706;
 }
 
 .log-badge-info {
-    background: rgba(99, 102, 241, .15);
+    background: rgba(99, 102, 241, .12);
     color: var(--accent);
 }
 
@@ -650,7 +665,7 @@ body {
 }
 
 .log-filters input[type="date"] {
-    background: var(--bg-input);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text);
@@ -753,6 +768,7 @@ body {
     gap: 8px;
     animation: toastIn .25s ease;
     transition: opacity .25s, transform .25s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
 }
 
 .toast.success {
