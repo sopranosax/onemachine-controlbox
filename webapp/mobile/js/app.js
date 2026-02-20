@@ -143,8 +143,8 @@ const App = {
             const [hRes, uRes, tRes, ahRes] = await Promise.all(fetches);
 
             // Build allowed house set for ADMIN
-            if (this.user.role !== 'MASTER' && ahRes && ahRes.admin_houses) {
-                this.allowedHouseIds = new Set(ahRes.admin_houses.map(ah => ah.house_id));
+            if (this.user.role !== 'MASTER' && ahRes && ahRes.houses) {
+                this.allowedHouseIds = new Set(ahRes.houses);
             } else {
                 this.allowedHouseIds = null; // MASTER sees all
             }
