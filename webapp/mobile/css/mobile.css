@@ -184,8 +184,10 @@ body {
     background: #fff;
 }
 
-.login-icon {
-    font-size: 3.5rem;
+.login-logo {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
 }
 
 .login-title {

@@ -32,7 +32,7 @@ const App = {
     showLogin() {
         document.getElementById('app').innerHTML = `
             <div class="view login-view active">
-                <div class="login-icon">🔐</div>
+                <div class="login-icon"><img src="icons/OneMachineCtrlBx_icon.png" alt="CtrlBx" class="login-logo"></div>
                 <div class="login-title">CtrlBx Admin</div>
                 <div class="login-subtitle">Acceso exclusivo para administradores</div>
                 <form class="login-form" id="login-form">
