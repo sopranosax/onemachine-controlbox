@@ -435,6 +435,9 @@ const App = {
                 ? `${this.esc(l.masterkey_holder || l.uid)} 🔑`
                 : this.esc(l.user_name || '-');
 
+            const device = this.devices.find(d => d.esp32_id === l.esp32_id);
+            const location = device ? device.location : null;
+
             return `
                 <div class="log-card">
                     <div class="log-card-top">
@@ -446,6 +449,7 @@ const App = {
                         <span><span class="log-card-label">UID</span> <code>${this.esc(l.uid || '-')}</code></span>
                         <span><span class="log-card-label">Casa</span> ${this.esc(l.house_id || '-')}</span>
                         <span><span class="log-card-label">Dispos.</span> <code>${this.esc(l.esp32_id || '-')}</code></span>
+                        ${location ? `<span><span class="log-card-label">Ubic.</span> ${this.esc(location)}</span>` : ''}
                         <span><span class="log-card-label">Token</span> ${this.esc(l.token_type || '-')}</span>
                         ${l.token_balance_after != null ? `<span><span class="log-card-label">Saldo</span> ${l.token_balance_after}</span>` : ''}
                     </div>
