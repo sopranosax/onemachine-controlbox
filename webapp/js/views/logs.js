@@ -221,6 +221,12 @@ const Logs = {
             return;
         }
 
+        // Build a quick token_type → color map from already-loaded token types
+        const tokenColorMap = {};
+        (this.tokenTypes || []).forEach(t => {
+            tokenColorMap[t.token_type] = t.token_type_color || '#6366F1';
+        });
+
         tbody.innerHTML = logs.map(log => {
             const isOfflineMk = log.event_type === 'MASTERKEY_ACCESS_OFFLINE';
             const isMkEvent = log.is_masterkey_event || log.event_type === 'MASTERKEY_ACCESS' || isOfflineMk;
@@ -235,6 +241,17 @@ const Logs = {
                 nameCell = Utils.escapeHtml(log.user_name || '-');
             }
 
+            // Colored token type badge using the configured TOKEN_TYPE_COLOR
+            const tokenColor = tokenColorMap[log.token_type] || '#6366F1';
+            // Compute a readable text color (white or dark) based on brightness
+            const hex = tokenColor.replace('#', '');
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            const textColor = brightness > 140 ? '#1a1a2e' : '#ffffff';
+            const tokenBadge = `<span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:0.78rem;font-weight:600;letter-spacing:0.03em;background:${tokenColor};color:${textColor};">${Utils.escapeHtml(log.token_type || '-')}</span>`;
+
             return `
                 <tr>
                     <td>${Utils.formatDate(log.timestamp)}</td>
@@ -242,7 +259,7 @@ const Logs = {
                     <td>${nameCell}</td>
                     <td>${Utils.escapeHtml(log.house_id || '-')}</td>
                     <td><a href="#" onclick="App.navigateTo('devices'); return false;" style="color:var(--accent-primary);text-decoration:none;"><code>${log.esp32_id}</code></a></td>
-                    <td><span class="badge badge-info">${log.token_type}</span></td>
+                    <td>${tokenBadge}</td>
                     <td><span class="badge ${Utils.getEventBadgeClass(log.event_type)}">${Utils.getEventTypeName(log.event_type)}</span></td>
                     <td>${log.token_balance_after != null ? log.token_balance_after : '-'}</td>
                 </tr>
