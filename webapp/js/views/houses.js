@@ -405,8 +405,8 @@ const Houses = {
 
     /**
      * Read an image file, center-crop and resize to 16:9 (640×360px) to match
-     * the MobileApp house card. 640×360 @ 72% JPEG quality ≈ 25-40 KB base64,
-     * safely under the ~45 KB Google Sheets cell character limit.
+     * the MobileApp house card. Quality is adaptive: starts at 80% and steps
+     * down automatically until the base64 fits the ~45 KB Google Sheets limit.
      */
     handleImageUpload(event, previewId) {
         const file = event.target.files[0];
@@ -420,23 +420,22 @@ const Houses = {
 
         const TARGET_W = 640;   // 2× the ~218px card width (retina-ready)
         const TARGET_H = 360;   // 16:9 ratio — cinematic, matches premium property apps
+        const MAX_CHARS = 44000; // Safe margin under Google Sheets 50K cell limit
 
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
-                // Scale to cover TARGET_W × TARGET_H (preserve aspect, then center-crop)
+                // Center-crop to 16:9
                 const srcRatio = img.width / img.height;
                 const dstRatio = TARGET_W / TARGET_H;
                 let sx, sy, sw, sh;
                 if (srcRatio > dstRatio) {
-                    // Source is wider than target: crop sides
                     sh = img.height;
                     sw = Math.round(img.height * dstRatio);
                     sx = Math.round((img.width - sw) / 2);
                     sy = 0;
                 } else {
-                    // Source is taller than target: crop top/bottom
                     sw = img.width;
                     sh = Math.round(img.width / dstRatio);
                     sx = 0;
@@ -446,14 +445,22 @@ const Houses = {
                 canvas.width = TARGET_W;
                 canvas.height = TARGET_H;
                 canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+
+                // Adaptive quality: start at 80%, step down 8% until it fits
+                let quality = 0.80;
+                let dataUrl;
+                do {
+                    dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    if (dataUrl.length <= MAX_CHARS) break;
+                    quality -= 0.08;
+                } while (quality >= 0.40);
+
                 this._pendingImg = dataUrl;
                 if (preview) {
+                    const kb = Math.round(dataUrl.length / 1024);
+                    const q = Math.round(quality * 100);
                     preview.innerHTML = `<img src="${dataUrl}" style="width:160px;height:90px;border-radius:8px;object-fit:cover;">
-                        <br><small style="color:var(--text-secondary);">${Math.round(dataUrl.length / 1024)}KB (640×360px)</small>`;
-                }
-                if (dataUrl.length > 45000) {
-                    Utils.showToast('Imagen muy grande, intente una más pequeña', 'warning');
+                        <br><small style="color:var(--text-secondary);">${kb} KB · 640×360 · calidad ${q}%</small>`;
                 }
             };
             img.src = e.target.result;
