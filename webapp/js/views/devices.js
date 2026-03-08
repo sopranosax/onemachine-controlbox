@@ -618,9 +618,30 @@ const Devices = {
             `<option value="${Utils.escapeHtml(h.house_id)}" ${h.house_id === device.house_id ? 'selected' : ''}>${Utils.escapeHtml(h.house_id)}</option>`
         ).join('');
 
+        const isMaster = Auth.isMaster();
+        // Parse device_echo for sync-status icons
+        let echo = {};
+        try { echo = device.device_echo ? JSON.parse(device.device_echo) : {}; } catch (_) {}
+        const si = (field, backendVal) => this._syncIcon(backendVal, echo[field]);
+
+        // Parse scanned networks for the picker (only WPA2-PSK)
+        let scannedNets = [];
+        try { scannedNets = device.wifi_networks ? JSON.parse(device.wifi_networks) : []; } catch (_) {}
+
         Utils.showModal({
             title: `Editar: ${esp32Id}`,
             content: `
+                <style>
+                  .sync-icon{font-size:0.75rem;cursor:default;margin-right:4px;vertical-align:middle;}
+                  .wifi-net-card{display:flex;align-items:center;gap:10px;padding:10px 14px;border:2px solid var(--border-color);
+                    border-radius:8px;cursor:pointer;margin-bottom:6px;transition:border-color .15s,background .15s;}
+                  .wifi-net-card:hover{border-color:var(--primary);background:rgba(99,102,241,.05);}
+                  .wifi-net-card.selected{border-color:var(--primary);background:rgba(99,102,241,.1);}
+                  .wifi-net-card .net-ssid{font-weight:600;flex:1;}
+                  .wifi-net-card .net-dots{letter-spacing:1px;color:var(--primary);}
+                  .wifi-net-card .net-auth{font-size:0.72rem;padding:2px 6px;border-radius:100px;
+                    background:rgba(99,102,241,.15);color:var(--primary);}
+                </style>
                 <form id="edit-device-form">
                     <div class="form-group">
                         <label>ID Dispositivo</label>
@@ -634,47 +655,68 @@ const Devices = {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="edit-device-location">Ubicación *</label>
+                        <label for="edit-device-location">${si('location', device.location)} Ubicación *</label>
                         <input type="text" id="edit-device-location" required value="${Utils.escapeHtml(device.location || '')}">
                     </div>
                     <div class="form-group">
-                        <label for="edit-device-token-type">Tipo de Token *</label>
+                        <label for="edit-device-token-type">${si('token_type', device.token_type)} Tipo de Token *</label>
                         <select id="edit-device-token-type" required>
                             ${tokenOptions}
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="edit-device-time">Tiempo de Activación (minutos) *</label>
+                        <label for="edit-device-time">${si('time_limit_min', device.time_limit_min)} Tiempo de Activación (minutos) *</label>
                         <input type="number" id="edit-device-time" required min="1" max="240" value="${device.time_limit_min || 30}">
                     </div>
                     <div class="form-group">
-                        <label for="edit-device-reconnect">Intervalo Reconexión (segundos) *</label>
+                        <label for="edit-device-reconnect">${si('reconnect_sec', device.reconnect_sec)} Intervalo Reconexión (segundos) *</label>
                         <input type="number" id="edit-device-reconnect" required min="10" max="300" value="${device.reconnect_sec || 30}">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-device-ssid">WiFi SSID *</label>
-                        <input type="text" id="edit-device-ssid" required value="${Utils.escapeHtml(device.wifi_ssid || '')}">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-device-password">WiFi Password *</label>
-                        <input type="text" id="edit-device-password" required value="${Utils.escapeHtml(device.wifi_password || '')}">
                     </div>
                     <div class="form-row" style="display:flex;gap:12px;">
                         <div class="form-group" style="flex:1;">
-                            <label for="edit-device-tw-start">Ventana Inicio</label>
+                            <label for="edit-device-tw-start">${si('tw_start', device.time_window_start)} Ventana Inicio</label>
                             <input type="time" id="edit-device-tw-start" value="${device.time_window_start || '08:00'}">
                         </div>
                         <div class="form-group" style="flex:1;">
-                            <label for="edit-device-tw-end">Ventana Fin</label>
+                            <label for="edit-device-tw-end">${si('tw_end', device.time_window_end)} Ventana Fin</label>
                             <input type="time" id="edit-device-tw-end" value="${device.time_window_end || '23:00'}">
                         </div>
                     </div>
+
+                    <!-- WiFi Network Picker (MASTER/ADMIN only) -->
+                    <div style="border-top:1px solid var(--border-color);margin:16px 0;padding-top:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                            <span style="font-size:1.1rem;">📶</span>
+                            <strong>WiFi Network</strong>
+                            <span style="font-size:0.8rem;color:var(--text-secondary);">(solo WPA2-PSK)</span>
+                        </div>
+                        ${this._renderWifiPicker(scannedNets, device.wifi_ssid)}
+                        <div class="form-group" style="margin-top:10px;">
+                            <label for="edit-device-ssid">⚫ WiFi SSID *</label>
+                            <input type="text" id="edit-device-ssid" required value="${Utils.escapeHtml(device.wifi_ssid || '')}">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-device-password">⚫ WiFi Password * <span style="font-size:0.75rem;color:var(--text-secondary);">${device.wifi_updated_at ? `Actualizada: ${new Date(device.wifi_updated_at).toLocaleString()}` : 'Sin fecha'}</span></label>
+                            <input type="text" id="edit-device-password" required value="${Utils.escapeHtml(device.wifi_password || '')}">
+                        </div>
+                    </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                     </div>
                 </form>
             `
+        });
+
+        // Wire up network card clicks
+        document.querySelectorAll('.wifi-net-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.wifi-net-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                const ssidInput = document.getElementById('edit-device-ssid');
+                if (ssidInput) ssidInput.value = card.dataset.ssid;
+            });
         });
 
         document.getElementById('edit-device-form').onsubmit = async (e) => {
@@ -776,6 +818,65 @@ const Devices = {
     isTokenTypeInactive(tokenType) {
         const token = this.tokenTypes.find(t => t.token_type === tokenType);
         return token && token.status === 'INACTIVO';
+    },
+
+    /**
+     * Returns a 🟢 / 🟡 / ⚫ sync-status icon span comparing the backend
+     * stored value vs the device_echo last reported by the device.
+     *   🟢  values match  → parameter is live on the device
+     *   🟡  values differ → change saved, pending device sync (≤30s)
+     *   ⚫  no echo yet   → device hasn't reported back
+     *
+     * Comparison is loose (toString) to handle numeric vs string values.
+     */
+    _syncIcon(backendVal, echoVal) {
+        const bv = backendVal != null ? String(backendVal).trim() : '';
+        const title_prefix = 'Dispositivo: ';
+        if (echoVal === undefined || echoVal === null || echoVal === '') {
+            return `<span class="sync-icon" title="Sin confirmación del dispositivo">⚫</span>`;
+        }
+        const ev = String(echoVal).trim();
+        if (bv === ev) {
+            return `<span class="sync-icon" title="${title_prefix}${ev} ✓ (confirmado)">🟢</span>`;
+        }
+        return `<span class="sync-icon" title="Cambio pendiente — dispositivo tiene: ${ev}">🟡</span>`;
+    },
+
+    /**
+     * Returns signal-strength dots (●●●●○ scale) for RSSI.
+     */
+    _signalDots(rssi) {
+        let level = 1;
+        if (rssi >= -50) level = 5;
+        else if (rssi >= -60) level = 4;
+        else if (rssi >= -70) level = 3;
+        else if (rssi >= -80) level = 2;
+        const filled = '●'.repeat(level);
+        const empty  = '○'.repeat(5 - level);
+        return `<span class="net-dots" title="${rssi} dBm">${filled}${empty}</span>`;
+    },
+
+    /**
+     * Renders the WiFi Network Picker card list.
+     * Only shows WPA2-PSK compatible networks from the last device scan.
+     */
+    _renderWifiPicker(networks, currentSsid) {
+        if (!networks || networks.length === 0) {
+            return `<div style="padding:12px;text-align:center;color:var(--text-secondary);font-size:0.9rem;">
+                        📡 Sin redes detectadas — enciende el dispositivo para escanear
+                    </div>`;
+        }
+        // Sort by RSSI descending (strongest first)
+        const sorted = [...networks].sort((a, b) => (b.rssi || -100) - (a.rssi || -100));
+        return sorted.map(net => {
+            const ssid = (net.ssid || '').trim();
+            const isSelected = ssid === (currentSsid || '').trim();
+            return `<div class="wifi-net-card${isSelected ? ' selected' : ''}" data-ssid="${Utils.escapeHtml(ssid)}">
+                        ${this._signalDots(net.rssi || -99)}
+                        <span class="net-ssid">${Utils.escapeHtml(ssid)}</span>
+                        <span class="net-auth">WPA2</span>
+                    </div>`;
+        }).join('');
     }
 };
 
