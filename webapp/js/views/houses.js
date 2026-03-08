@@ -405,8 +405,8 @@ const Houses = {
 
     /**
      * Read an image file, center-crop and resize to 16:9 (640×360px) to match
-     * the MobileApp house card. 640×360 is retina-ready for the 218px card at
-     * 2× DPR. JPEG 90% ≈ 25-40 KB — well under the 45 KB limit.
+     * the MobileApp house card. 640×360 @ 72% JPEG quality ≈ 25-40 KB base64,
+     * safely under the ~45 KB Google Sheets cell character limit.
      */
     handleImageUpload(event, previewId) {
         const file = event.target.files[0];
@@ -446,7 +446,7 @@ const Houses = {
                 canvas.width = TARGET_W;
                 canvas.height = TARGET_H;
                 canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.90);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
                 this._pendingImg = dataUrl;
                 if (preview) {
                     preview.innerHTML = `<img src="${dataUrl}" style="width:160px;height:90px;border-radius:8px;object-fit:cover;">
