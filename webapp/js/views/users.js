@@ -184,7 +184,7 @@ const Users = {
         if (this.searchTerm) {
             filtered = filtered.filter(user =>
                 user.user_name.toLowerCase().includes(this.searchTerm) ||
-                user.uid.toLowerCase().includes(this.searchTerm)
+                String(user.uid).toLowerCase().includes(this.searchTerm)
             );
         }
 
@@ -212,7 +212,8 @@ const Users = {
      * Get house IDs assigned to a user
      */
     getHousesForUser(uid) {
-        return this.userHouses.filter(a => a.uid === uid).map(a => a.house_id);
+        const uidStr = String(uid);
+        return this.userHouses.filter(a => String(a.uid) === uidStr).map(a => a.house_id);
     },
 
     /**
@@ -293,7 +294,8 @@ const Users = {
      * View user detail
      */
     viewUser(uid) {
-        const user = this.users.find(u => u.uid === uid);
+        uid = String(uid);
+        const user = this.users.find(u => String(u.uid) === uid);
         if (!user) return;
 
         const tokens = user.tokens || {};
@@ -512,7 +514,8 @@ const Users = {
      * Edit user
      */
     editUser(uid) {
-        const user = this.users.find(u => u.uid === uid);
+        uid = String(uid);
+        const user = this.users.find(u => String(u.uid) === uid);
         if (!user) return;
 
         const userType = user.user_type || 'GLOBAL';
@@ -615,7 +618,8 @@ const Users = {
      * Adjust tokens modal — shows only token types from devices the user can access
      */
     adjustTokens(uid) {
-        const user = this.users.find(u => u.uid === uid);
+        uid = String(uid);
+        const user = this.users.find(u => String(u.uid) === uid);
         if (!user) return;
 
         const userType = user.user_type || 'GLOBAL';
@@ -732,7 +736,8 @@ const Users = {
      * Toggle user status
      */
     async toggleStatus(uid) {
-        const user = this.users.find(u => u.uid === uid);
+        uid = String(uid);
+        const user = this.users.find(u => String(u.uid) === uid);
         if (!user) return;
 
         const newStatus = user.status === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
