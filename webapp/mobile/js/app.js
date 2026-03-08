@@ -264,7 +264,8 @@ const App = {
     },
 
     selectUser(uid) {
-        this.selectedUser = this.users.find(u => u.uid === uid);
+        uid = String(uid);
+        this.selectedUser = this.users.find(u => String(u.uid) === uid);
         if (this.selectedUser) this.renderTokenEditor();
     },
 
