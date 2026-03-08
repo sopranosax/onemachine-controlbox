@@ -621,12 +621,12 @@ const Devices = {
         const isMaster = Auth.isMaster();
         // Parse device_echo for sync-status icons
         let echo = {};
-        try { echo = device.device_echo ? JSON.parse(device.device_echo) : {}; } catch (_) {}
+        try { echo = device.device_echo ? JSON.parse(device.device_echo) : {}; } catch (_) { }
         const si = (field, backendVal) => this._syncIcon(backendVal, echo[field]);
 
         // Parse scanned networks for the picker (only WPA2-PSK)
         let scannedNets = [];
-        try { scannedNets = device.wifi_networks ? JSON.parse(device.wifi_networks) : []; } catch (_) {}
+        try { scannedNets = device.wifi_networks ? JSON.parse(device.wifi_networks) : []; } catch (_) { }
 
         Utils.showModal({
             title: `Editar: ${esp32Id}`,
@@ -692,7 +692,7 @@ const Devices = {
                         </div>
                         ${this._renderWifiPicker(scannedNets, device.wifi_ssid)}
                         <div class="form-group" style="margin-top:10px;">
-                            <label for="edit-device-ssid">⚫ WiFi SSID *</label>
+                            <label for="edit-device-ssid">${si('wifi_ssid', device.wifi_ssid)} WiFi SSID *</label>
                             <input type="text" id="edit-device-ssid" required value="${Utils.escapeHtml(device.wifi_ssid || '')}">
                         </div>
                         <div class="form-group">
@@ -852,7 +852,7 @@ const Devices = {
         else if (rssi >= -70) level = 3;
         else if (rssi >= -80) level = 2;
         const filled = '●'.repeat(level);
-        const empty  = '○'.repeat(5 - level);
+        const empty = '○'.repeat(5 - level);
         return `<span class="net-dots" title="${rssi} dBm">${filled}${empty}</span>`;
     },
 
