@@ -404,7 +404,9 @@ const Houses = {
     },
 
     /**
-     * Read an image file, resize to max 120px, and convert to base64 JPEG.
+     * Read an image file, resize and crop to 4:3 (360x270px) to match the
+     * MobileApp house card aspect-ratio, then convert to base64 JPEG.
+     * Target: 360 × 270 px @ 85% quality  ≈ 20-40 KB — well under 45 KB limit.
      */
     handleImageUpload(event, previewId) {
         const file = event.target.files[0];
@@ -416,23 +418,39 @@ const Houses = {
         const preview = document.getElementById(previewId);
         if (preview) preview.innerHTML = '<span style="color:var(--text-secondary);">Procesando imagen...</span>';
 
+        const TARGET_W = 360;   // 2× the ~185px card width (retina-ready)
+        const TARGET_H = 270;   // 4:3 ratio — matches .house-card-img aspect-ratio
+
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
-                const MAX = 120;
-                let w = img.width, h = img.height;
-                if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
-                else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+                // Scale to cover TARGET_W × TARGET_H (preserve aspect, then center-crop)
+                const srcRatio = img.width / img.height;
+                const dstRatio = TARGET_W / TARGET_H;
+                let sx, sy, sw, sh;
+                if (srcRatio > dstRatio) {
+                    // Source is wider than target: crop sides
+                    sh = img.height;
+                    sw = Math.round(img.height * dstRatio);
+                    sx = Math.round((img.width - sw) / 2);
+                    sy = 0;
+                } else {
+                    // Source is taller than target: crop top/bottom
+                    sw = img.width;
+                    sh = Math.round(img.width / dstRatio);
+                    sx = 0;
+                    sy = Math.round((img.height - sh) / 2);
+                }
                 const canvas = document.createElement('canvas');
-                canvas.width = w;
-                canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                canvas.width = TARGET_W;
+                canvas.height = TARGET_H;
+                canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
                 this._pendingImg = dataUrl;
                 if (preview) {
-                    preview.innerHTML = `<img src="${dataUrl}" style="width:80px;height:80px;border-radius:8px;object-fit:cover;">
-                        <br><small style="color:var(--text-secondary);">${Math.round(dataUrl.length / 1024)}KB</small>`;
+                    preview.innerHTML = `<img src="${dataUrl}" style="width:120px;height:90px;border-radius:8px;object-fit:cover;">
+                        <br><small style="color:var(--text-secondary);">${Math.round(dataUrl.length / 1024)}KB (360×270px)</small>`;
                 }
                 if (dataUrl.length > 45000) {
                     Utils.showToast('Imagen muy grande, intente una más pequeña', 'warning');
