@@ -607,9 +607,28 @@ const Devices = {
             return;
         }
 
-        const device = this.devices.find(d => d.esp32_id === esp32Id);
-        if (!device) return;
+        // Fetch FRESH device data so device_echo (sync-status icons) and
+        // wifi_networks (WiFi picker) are current, not stale from page-load cache.
+        API.getDevice(esp32Id).then(result => {
+            const device = result && result.device ? result.device : this.devices.find(d => d.esp32_id === esp32Id);
+            if (!device) return;
+            // Normalise booleans / time values (same as loadDevices does)
+            device.active = device.active === true || device.active === 'TRUE' || device.active === 'true';
+            device.time_window_start = this.formatTime24(device.time_window_start, '08:00');
+            device.time_window_end = this.formatTime24(device.time_window_end, '23:00');
+            this._openEditModal(esp32Id, device);
+        }).catch(() => {
+            // Fallback to cached data if network fails
+            const device = this.devices.find(d => d.esp32_id === esp32Id);
+            if (device) this._openEditModal(esp32Id, device);
+        });
+    },
 
+    /**
+     * Internal: build and display the Edit Device modal.
+     * Called by editDevice() after fresh device data is fetched.
+     */
+    _openEditModal(esp32Id, device) {
         const tokenOptions = this.tokenTypes.map(t =>
             `<option value="${t.token_type}" ${t.token_type === device.token_type ? 'selected' : ''}>${t.token_type} — ${Utils.escapeHtml(t.token_name)}</option>`
         ).join('');
