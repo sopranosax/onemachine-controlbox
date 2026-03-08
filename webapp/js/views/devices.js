@@ -715,7 +715,7 @@ const Devices = {
                             <input type="text" id="edit-device-ssid" required value="${Utils.escapeHtml(device.wifi_ssid || '')}">
                         </div>
                         <div class="form-group">
-                            <label for="edit-device-password">⚫ WiFi Password * <span style="font-size:0.75rem;color:var(--text-secondary);">${device.wifi_updated_at ? `Actualizada: ${new Date(device.wifi_updated_at).toLocaleString()}` : 'Sin fecha'}</span></label>
+                            <label for="edit-device-password">${si('wifi_password', device.wifi_password)} WiFi Password * <span style="font-size:0.75rem;color:var(--text-secondary);">${device.wifi_updated_at ? `Actualizada: ${new Date(device.wifi_updated_at).toLocaleString()}` : 'Sin fecha'}</span></label>
                             <input type="text" id="edit-device-password" required value="${Utils.escapeHtml(device.wifi_password || '')}">
                         </div>
                     </div>
