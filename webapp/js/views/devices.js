@@ -206,7 +206,7 @@ const Devices = {
         if (!filteredDevices || filteredDevices.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="empty-state">
                             <div class="empty-state-icon">📟</div>
                             <p class="empty-state-title">No hay dispositivos</p>
@@ -252,6 +252,7 @@ const Devices = {
                 <tr>
                     <td><strong>${Utils.escapeHtml(device.esp32_id)}</strong></td>
                     <td>${houseDisplay}</td>
+                    <td>${device.description ? Utils.escapeHtml(device.description) : '<span style="color:var(--text-secondary);">—</span>'}</td>
                     <td>${Utils.escapeHtml(device.location || '')}</td>
                     <td>
                         <span class="${this.isTokenTypeInactive(device.token_type) ? 'token-inactive' : ''}">
@@ -326,6 +327,10 @@ const Devices = {
                     <div class="detail-row">
                         <span class="detail-label">Casa</span>
                         <span class="detail-value">${device.house_id ? `<span class="status-badge status-active" style="font-size:0.85rem;">🏠 ${Utils.escapeHtml(device.house_id)}</span>` : '<span style="color:var(--text-secondary);">Sin asignar</span>'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Descripción</span>
+                        <span class="detail-value">${Utils.escapeHtml(device.description || '—')}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Ubicación</span>
@@ -523,6 +528,10 @@ const Devices = {
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="new-device-description">Descripción</label>
+                        <input type="text" id="new-device-description" placeholder="Ej: Puerta principal lavandería">
+                    </div>
+                    <div class="form-group">
                         <label for="new-device-location">Ubicación *</label>
                         <input type="text" id="new-device-location" required placeholder="Lavandería Piso 1">
                     </div>
@@ -571,6 +580,7 @@ const Devices = {
 
             const deviceData = {
                 esp32_id: document.getElementById('new-device-id').value.trim(),
+                description: document.getElementById('new-device-description').value.trim(),
                 location: document.getElementById('new-device-location').value.trim(),
                 token_type: document.getElementById('new-device-token-type').value,
                 time_limit_min: parseInt(document.getElementById('new-device-time').value),
@@ -674,6 +684,10 @@ const Devices = {
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="edit-device-description">Descripción</label>
+                        <input type="text" id="edit-device-description" placeholder="Ej: Puerta principal lavandería" value="${Utils.escapeHtml(device.description || '')}">
+                    </div>
+                    <div class="form-group">
                         <label for="edit-device-location">${si('location', device.location)} Ubicación *</label>
                         <input type="text" id="edit-device-location" required value="${Utils.escapeHtml(device.location || '')}">
                     </div>
@@ -742,6 +756,7 @@ const Devices = {
             e.preventDefault();
 
             const deviceData = {
+                description: document.getElementById('edit-device-description').value.trim(),
                 location: document.getElementById('edit-device-location').value.trim(),
                 token_type: document.getElementById('edit-device-token-type').value,
                 time_limit_min: parseInt(document.getElementById('edit-device-time').value),
