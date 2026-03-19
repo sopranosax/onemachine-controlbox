@@ -223,8 +223,13 @@ const Logs = {
 
     // ==================== LOAD LOGS ====================
     async loadLogs() {
+        const dateFrom = document.getElementById('filter-date-from')?.value;
+        const dateTo   = document.getElementById('filter-date-to')?.value;
+        const apiParams = {};
+        if (dateFrom) apiParams.date_from = dateFrom;
+        if (dateTo)   apiParams.date_to   = dateTo;
         try {
-            const response = await API.getLogs(this.filters || {});
+            const response = await API.getLogs(apiParams);
             this.logs = response.logs || [];
         } catch (e) {
             this.logs = [];
@@ -241,11 +246,22 @@ const Logs = {
     applyFilters() {
         let filtered = [...this.logs];
 
-        // Date range filter (use the raw timestamp from logs)
-        const dateFrom = document.getElementById('filter-date-from')?.value;
-        const dateTo = document.getElementById('filter-date-to')?.value;
-        // Note: date filtering is done server-side via API.getLogs; client-side filtering
-        // is for the multi-select filters only.
+        // Date range filter — compare the YYYY-MM-DD prefix of each log timestamp
+        // against the values of the Desde / Hasta date inputs.
+        const dateFrom = document.getElementById('filter-date-from')?.value; // 'YYYY-MM-DD'
+        const dateTo   = document.getElementById('filter-date-to')?.value;   // 'YYYY-MM-DD'
+        if (dateFrom) {
+            filtered = filtered.filter(l => {
+                const d = (l.timestamp || '').substring(0, 10);
+                return d >= dateFrom;
+            });
+        }
+        if (dateTo) {
+            filtered = filtered.filter(l => {
+                const d = (l.timestamp || '').substring(0, 10);
+                return d <= dateTo;
+            });
+        }
 
         // House filter
         if (this.selectedHouses.length > 0) {
