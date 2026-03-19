@@ -124,7 +124,17 @@ const Logs = {
 
     buildMultiSelects() {
         this.buildMultiSelect('log-house', this.houses.map(h => h.house_id), this.selectedHouses, 'Todas');
-        this.buildMultiSelect('log-device', this.devices.map(d => d.esp32_id), this.selectedDevices, 'Todos');
+        // Device filter: value = esp32_id, label = description (or esp32_id fallback)
+        this.buildMultiSelect(
+            'log-device',
+            this.devices.map(d => d.esp32_id),
+            this.selectedDevices,
+            'Todos',
+            (espId) => {
+                const dev = this.devices.find(d => d.esp32_id === espId);
+                return (dev && dev.description) ? dev.description : espId;
+            }
+        );
         this.buildMultiSelect('log-token', this.tokenTypes.map(t => t.token_type), this.selectedTokenTypes, 'Todos');
         this.buildMultiSelect('log-event', this.EVENT_TYPES, this.selectedEventTypes, 'Todos', v => Utils.getEventTypeName(v));
     },
@@ -252,13 +262,19 @@ const Logs = {
             const textColor = brightness > 140 ? '#1a1a2e' : '#ffffff';
             const tokenBadge = `<span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:0.78rem;font-weight:600;letter-spacing:0.03em;background:${tokenColor};color:${textColor};">${Utils.escapeHtml(log.token_type || '-')}</span>`;
 
+            // Resolve device description for this log entry
+            const logDevice = this.devices.find(d => d.esp32_id === log.esp32_id);
+            const deviceLabel = logDevice && logDevice.description
+                ? `${Utils.escapeHtml(logDevice.description)}<br><span style="color:var(--text-secondary);font-size:0.78rem;font-family:monospace;">${Utils.escapeHtml(log.esp32_id || '')}</span>`
+                : `<code>${Utils.escapeHtml(log.esp32_id || '-')}</code>`;
+
             return `
                 <tr>
                     <td>${Utils.formatDate(log.timestamp)}</td>
                     <td><code>${Utils.escapeHtml(log.uid || '-')}</code></td>
                     <td>${nameCell}</td>
                     <td>${Utils.escapeHtml(log.house_id || '-')}</td>
-                    <td><a href="#" onclick="App.navigateTo('devices'); return false;" style="color:var(--accent-primary);text-decoration:none;"><code>${log.esp32_id}</code></a></td>
+                    <td><a href="#" onclick="App.navigateTo('devices'); return false;" style="color:var(--accent-primary);text-decoration:none;">${deviceLabel}</a></td>
                     <td>${tokenBadge}</td>
                     <td><span class="badge ${Utils.getEventBadgeClass(log.event_type)}">${Utils.getEventTypeName(log.event_type)}</span></td>
                     <td>${log.token_balance_after != null ? log.token_balance_after : '-'}</td>

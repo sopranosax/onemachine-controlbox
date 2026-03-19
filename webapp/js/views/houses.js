@@ -271,6 +271,7 @@ const Houses = {
                             <thead>
                                 <tr>
                                     <th>ID Dispositivo</th>
+                                    <th>Descripción</th>
                                     <th>Ubicación</th>
                                     <th>Tipo</th>
                                     <th>Estado</th>
@@ -288,6 +289,7 @@ const Houses = {
                     return `
                                         <tr>
                                             <td><strong>${Utils.escapeHtml(d.esp32_id)}</strong></td>
+                                            <td>${Utils.escapeHtml(d.description || '—')}</td>
                                             <td>${Utils.escapeHtml(d.location || '—')}</td>
                                             <td>${Utils.escapeHtml(d.token_type || '—')}</td>
                                             <td><span class="status-badge ${activeBadge}">${activeText}</span></td>

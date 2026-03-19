@@ -58,7 +58,13 @@ const MasterKeys = {
         }
         if (mk.masterkey_level === 'DEVICE') {
             const device = this.devices.find(d => d.esp32_id === mk.level_target);
-            return device ? `${mk.level_target} (${device.location || ''})` : mk.level_target || '—';
+            if (device) {
+                const parts = [mk.level_target];
+                if (device.description) parts.push(device.description);
+                if (device.location) parts.push(device.location);
+                return parts.join(' — ');
+            }
+            return mk.level_target || '—';
         }
         return mk.level_target || '—';
     },
@@ -118,9 +124,12 @@ const MasterKeys = {
             `<option value="${h.house_id}">${h.house_id} — ${h.house_street || ''} ${h.house_number || ''}</option>`
         ).join('');
 
-        const devicesOptions = this.devices.map(d =>
-            `<option value="${d.esp32_id}">${d.esp32_id} — ${d.location || ''}</option>`
-        ).join('');
+        const devicesOptions = this.devices.map(d => {
+            const parts = [d.esp32_id];
+            if (d.description) parts.push(d.description);
+            if (d.location) parts.push(d.location);
+            return `<option value="${d.esp32_id}">${Utils.escapeHtml(parts.join(' — '))}</option>`;
+        }).join('');
 
         Utils.showModal({
             title: 'Nueva MasterKey', content: `
@@ -229,9 +238,13 @@ const MasterKeys = {
             `<option value="${h.house_id}" ${mk.level_target === h.house_id ? 'selected' : ''}>${h.house_id} — ${h.house_street || ''} ${h.house_number || ''}</option>`
         ).join('');
 
-        const devicesOptions = this.devices.map(d =>
-            `<option value="${d.esp32_id}" ${mk.level_target === d.esp32_id ? 'selected' : ''}>${d.esp32_id} — ${d.location || ''}</option>`
-        ).join('');
+        const devicesOptions = this.devices.map(d => {
+            const parts = [d.esp32_id];
+            if (d.description) parts.push(d.description);
+            if (d.location) parts.push(d.location);
+            const sel = mk.level_target === d.esp32_id ? 'selected' : '';
+            return `<option value="${d.esp32_id}" ${sel}>${Utils.escapeHtml(parts.join(' — '))}</option>`;
+        }).join('');
 
         Utils.showModal({
             title: `Editar MasterKey: ${masterkeyId}`, content: `
