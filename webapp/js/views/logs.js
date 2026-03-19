@@ -73,6 +73,29 @@ const Logs = {
         }
     },
 
+    // ==================== CASCADING FILTER HELPERS ====================
+
+    /**
+     * Returns the subset of devices that belong to the currently selected houses.
+     * If no houses are selected (= "Todas"), returns all devices.
+     */
+    getFilteredDevices() {
+        if (this.selectedHouses.length === 0) return this.devices;
+        return this.devices.filter(d => this.selectedHouses.includes(d.house_id));
+    },
+
+    /**
+     * Returns the subset of tokenTypes whose token_type appears on at least one
+     * of the currently filtered devices.
+     * If no houses are selected (= "Todas"), returns all token types.
+     */
+    getFilteredTokenTypes() {
+        if (this.selectedHouses.length === 0) return this.tokenTypes;
+        const filteredDevices = this.getFilteredDevices();
+        const usedTypes = new Set(filteredDevices.map(d => d.token_type).filter(Boolean));
+        return this.tokenTypes.filter(t => usedTypes.has(t.token_type));
+    },
+
     // ==================== MULTI-SELECT BUILDER ====================
     buildMultiSelect(prefix, options, selectedArr, defaultLabel, labelFn) {
         const btn = document.getElementById(`${prefix}-btn`);
@@ -112,22 +135,35 @@ const Logs = {
             const checked = Array.from(dropdown.querySelectorAll('input:checked')).map(cb => cb.value);
             if (prefix === 'log-house') {
                 this.selectedHouses = checked.length === options.length ? [] : checked;
+                // Cascade: rebuild Device and Token filters with narrowed options,
+                // and clear any stale selections in those dependent filters.
+                this.selectedDevices = [];
+                this.selectedTokenTypes = [];
+                this._buildDependentMultiSelects();
             } else if (prefix === 'log-device') {
-                this.selectedDevices = checked.length === options.length ? [] : checked;
+                const allOpts = this.getFilteredDevices().map(d => d.esp32_id);
+                this.selectedDevices = checked.length === allOpts.length ? [] : checked;
             } else if (prefix === 'log-token') {
-                this.selectedTokenTypes = checked.length === options.length ? [] : checked;
+                const allOpts = this.getFilteredTokenTypes().map(t => t.token_type);
+                this.selectedTokenTypes = checked.length === allOpts.length ? [] : checked;
             } else if (prefix === 'log-event') {
                 this.selectedEventTypes = checked.length === options.length ? [] : checked;
             }
         });
     },
 
-    buildMultiSelects() {
-        this.buildMultiSelect('log-house', this.houses.map(h => h.house_id), this.selectedHouses, 'Todas');
-        // Device filter: value = esp32_id, label = description (or esp32_id fallback)
+    /**
+     * Rebuilds the Dispositivo and Tipo Token multi-selects using the
+     * currently filtered (house-aware) device and token type lists.
+     * Called whenever the Casa selection changes.
+     */
+    _buildDependentMultiSelects() {
+        const filteredDevices = this.getFilteredDevices();
+        const filteredTokenTypes = this.getFilteredTokenTypes();
+
         this.buildMultiSelect(
             'log-device',
-            this.devices.map(d => d.esp32_id),
+            filteredDevices.map(d => d.esp32_id),
             this.selectedDevices,
             'Todos',
             (espId) => {
@@ -135,7 +171,18 @@ const Logs = {
                 return (dev && dev.description) ? dev.description : espId;
             }
         );
-        this.buildMultiSelect('log-token', this.tokenTypes.map(t => t.token_type), this.selectedTokenTypes, 'Todos');
+        this.buildMultiSelect(
+            'log-token',
+            filteredTokenTypes.map(t => t.token_type),
+            this.selectedTokenTypes,
+            'Todos'
+        );
+    },
+
+    buildMultiSelects() {
+        this.buildMultiSelect('log-house', this.houses.map(h => h.house_id), this.selectedHouses, 'Todas');
+        // Device and Token filters are house-aware
+        this._buildDependentMultiSelects();
         this.buildMultiSelect('log-event', this.EVENT_TYPES, this.selectedEventTypes, 'Todos', v => Utils.getEventTypeName(v));
     },
 
@@ -160,6 +207,7 @@ const Logs = {
                 this.selectedTokenTypes = [];
                 this.selectedEventTypes = [];
                 this.initFilters();
+                // Rebuild all selects with full unfiltered lists
                 this.buildMultiSelects();
                 this.applyFilters();
             };
@@ -204,9 +252,14 @@ const Logs = {
             filtered = filtered.filter(l => this.selectedHouses.includes(l.house_id || ''));
         }
 
-        // Device filter
+        // Device filter (implicitly already house-constrained when selectedDevices is set)
         if (this.selectedDevices.length > 0) {
             filtered = filtered.filter(l => this.selectedDevices.includes(l.esp32_id));
+        } else if (this.selectedHouses.length > 0) {
+            // No specific devices chosen but houses are selected — filter by the
+            // devices that belong to those houses.
+            const houseDeviceIds = this.getFilteredDevices().map(d => d.esp32_id);
+            filtered = filtered.filter(l => houseDeviceIds.includes(l.esp32_id));
         }
 
         // Token type filter
