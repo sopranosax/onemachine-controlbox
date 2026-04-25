@@ -2,6 +2,8 @@
  * Configuration — Admin Mobile App
  */
 const Config = {
+    APP_VERSION: '11.0.0',
+
     API_BASE_URL: 'https://script.google.com/macros/s/AKfycbzV_3SizcAAjgzoLyKR8GUmHcLxAyVKoVKn1AfsJdTOdS4Sn7ZDCg-Z1WEc1lQnhPR3/exec',
 
     ROLES: { MASTER: 'MASTER', ADMIN: 'ADMIN' },

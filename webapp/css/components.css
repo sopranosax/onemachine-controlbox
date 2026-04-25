@@ -5,6 +5,7 @@
 /* ============== LOGIN PAGE ============== */
 .login-container {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
@@ -50,6 +51,32 @@
 
 .login-form .form-group {
     margin-bottom: var(--space-lg);
+}
+
+/* ============== VERSION BADGE ============== */
+.app-version-badge {
+    font-family: var(--font-family);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.45);
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Version on login page — centered below card */
+#login-version {
+    margin-top: 16px;
+    text-align: center;
+}
+
+/* Version in sidebar — pinned to bottom */
+.sidebar-version {
+    color: var(--color-gray-400);
+    margin-top: auto;
+    padding-top: var(--space-md);
+    text-align: center;
+    border-top: 1px solid var(--color-gray-100);
 }
 
 /* ============== APP HEADER ============== */
@@ -147,6 +174,8 @@
     border-right: 1px solid var(--color-gray-100);
     overflow-y: auto;
     z-index: 90;
+    display: flex;
+    flex-direction: column;
 }
 
 .nav-list {

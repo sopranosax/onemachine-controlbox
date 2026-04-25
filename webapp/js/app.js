@@ -9,6 +9,9 @@ const App = {
      * Initialize the application
      */
     init() {
+        // Populate version badges across the UI
+        this.populateVersionBadges();
+
         // Check if user is logged in
         if (Auth.init()) {
             this.showApp();
@@ -17,6 +20,16 @@ const App = {
         }
 
         this.bindEvents();
+    },
+
+    /**
+     * Populate all version badge elements with the current app version
+     */
+    populateVersionBadges() {
+        const version = Config.APP_VERSION || '?.?.?';
+        document.querySelectorAll('.app-version-badge').forEach(el => {
+            el.textContent = `v${version}`;
+        });
     },
 
     /**

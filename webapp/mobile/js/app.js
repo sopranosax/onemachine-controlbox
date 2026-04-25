@@ -40,9 +40,11 @@ const App = {
                     <button type="submit" class="btn-primary" id="login-btn">Ingresar</button>
                     <div class="login-error" id="login-error"></div>
                 </form>
+                <div class="mob-version-badge" id="mob-login-version"></div>
             </div>
         `;
         document.getElementById('login-form').onsubmit = e => this.handleLogin(e);
+        this.populateVersion('mob-login-version');
     },
 
     async handleLogin(e) {
@@ -105,10 +107,12 @@ const App = {
                 <button id="tab-logs" onclick="App.switchTab('logs')">
                     <span class="tab-icon">📋</span> Registro
                 </button>
+                <span class="tab-version" id="mob-app-version"></span>
             </nav>
         `;
         this.currentTab = 'users';
         this.usersSubView = 'houses';
+        this.populateVersion('mob-app-version');
         this.loadData();
     },
 
@@ -489,6 +493,11 @@ const App = {
     },
 
     // ═══════════════════════ HELPERS ═══════════════════════
+    populateVersion(elementId) {
+        const el = document.getElementById(elementId);
+        if (el) el.textContent = `v${Config.APP_VERSION || '?.?.?'}`;
+    },
+
     esc(str) {
         if (!str) return '';
         const d = document.createElement('div');

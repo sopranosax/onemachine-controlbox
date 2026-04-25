@@ -3,6 +3,9 @@
  */
 
 const Config = {
+    // App version (displayed in UI for version tracking)
+    APP_VERSION: '11.0.0',
+
     // Google Apps Script Web App URL
     // Replace with your deployed Apps Script Web App URL
     API_BASE_URL: 'https://script.google.com/macros/s/AKfycbzV_3SizcAAjgzoLyKR8GUmHcLxAyVKoVKn1AfsJdTOdS4Sn7ZDCg-Z1WEc1lQnhPR3/exec',
