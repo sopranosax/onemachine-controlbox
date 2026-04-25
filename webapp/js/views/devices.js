@@ -3,6 +3,56 @@
  * Table-based layout with detail view
  */
 
+/**
+ * Curated list of world timezones.
+ * Each entry: { iana, posix, label }
+ *   iana  – IANA timezone name (stored in backend)
+ *   posix – POSIX TZ string (sent to ESP32 for configTzTime())
+ *   label – Human-readable display label
+ */
+const TIMEZONE_MAP = [
+    { iana: 'Etc/UTC',              posix: 'GMT0',                                       label: '(UTC+0) UTC / Greenwich' },
+    { iana: 'Pacific/Midway',       posix: 'SST11',                                      label: '(UTC-11) Midway / Samoa' },
+    { iana: 'Pacific/Honolulu',     posix: 'HST10',                                      label: '(UTC-10) Honolulu / Hawaii' },
+    { iana: 'America/Anchorage',    posix: 'AKST9AKDT,M3.2.0,M11.1.0',                   label: '(UTC-9) Anchorage / Alaska' },
+    { iana: 'America/Los_Angeles',  posix: 'PST8PDT,M3.2.0,M11.1.0',                     label: '(UTC-8) Los Angeles / Pacific US' },
+    { iana: 'America/Denver',       posix: 'MST7MDT,M3.2.0,M11.1.0',                     label: '(UTC-7) Denver / Mountain US' },
+    { iana: 'America/Phoenix',      posix: 'MST7',                                       label: '(UTC-7) Phoenix / Arizona (no DST)' },
+    { iana: 'America/Chicago',      posix: 'CST6CDT,M3.2.0,M11.1.0',                     label: '(UTC-6) Chicago / Central US' },
+    { iana: 'America/Mexico_City',  posix: 'CST6',                                       label: '(UTC-6) Ciudad de México' },
+    { iana: 'America/New_York',     posix: 'EST5EDT,M3.2.0,M11.1.0',                     label: '(UTC-5) New York / Eastern US' },
+    { iana: 'America/Bogota',       posix: '<-05>5',                                     label: '(UTC-5) Bogotá / Colombia' },
+    { iana: 'America/Lima',         posix: '<-05>5',                                     label: '(UTC-5) Lima / Perú' },
+    { iana: 'America/Caracas',      posix: '<-04>4',                                     label: '(UTC-4) Caracas / Venezuela' },
+    { iana: 'America/La_Paz',       posix: '<-04>4',                                     label: '(UTC-4) La Paz / Bolivia' },
+    { iana: 'America/Santiago',     posix: '<-04>4<-03>,M9.1.6/24,M4.1.6/24',            label: '(UTC-4) Santiago / Chile' },
+    { iana: 'America/Argentina/Buenos_Aires', posix: '<-03>3',                            label: '(UTC-3) Buenos Aires / Argentina' },
+    { iana: 'America/Sao_Paulo',    posix: '<-03>3',                                     label: '(UTC-3) São Paulo / Brasil' },
+    { iana: 'America/Montevideo',   posix: '<-03>3',                                     label: '(UTC-3) Montevideo / Uruguay' },
+    { iana: 'Atlantic/South_Georgia', posix: '<-02>2',                                   label: '(UTC-2) Georgia del Sur' },
+    { iana: 'Atlantic/Azores',      posix: '<-01>1<+00>,M3.5.0/0,M10.5.0/1',             label: '(UTC-1) Azores' },
+    { iana: 'Europe/London',        posix: 'GMT0BST,M3.5.0/1,M10.5.0',                   label: '(UTC+0) Londres / Reino Unido' },
+    { iana: 'Europe/Madrid',        posix: 'CET-1CEST,M3.5.0,M10.5.0/3',                 label: '(UTC+1) Madrid / España' },
+    { iana: 'Europe/Paris',         posix: 'CET-1CEST,M3.5.0,M10.5.0/3',                 label: '(UTC+1) París / Francia' },
+    { iana: 'Europe/Berlin',        posix: 'CET-1CEST,M3.5.0,M10.5.0/3',                 label: '(UTC+1) Berlín / Alemania' },
+    { iana: 'Africa/Lagos',         posix: 'WAT-1',                                      label: '(UTC+1) Lagos / Nigeria' },
+    { iana: 'Europe/Athens',        posix: 'EET-2EEST,M3.5.0/3,M10.5.0/4',               label: '(UTC+2) Atenas / Grecia' },
+    { iana: 'Africa/Cairo',         posix: 'EET-2',                                      label: '(UTC+2) El Cairo / Egipto' },
+    { iana: 'Africa/Johannesburg',  posix: 'SAST-2',                                     label: '(UTC+2) Johannesburgo / Sudáfrica' },
+    { iana: 'Europe/Moscow',        posix: 'MSK-3',                                      label: '(UTC+3) Moscú / Rusia' },
+    { iana: 'Asia/Riyadh',          posix: '<+03>-3',                                    label: '(UTC+3) Riyadh / Arabia Saudita' },
+    { iana: 'Asia/Dubai',           posix: '<+04>-4',                                    label: '(UTC+4) Dubai / EAU' },
+    { iana: 'Asia/Kolkata',         posix: 'IST-5:30',                                   label: '(UTC+5:30) India / Kolkata' },
+    { iana: 'Asia/Dhaka',           posix: '<+06>-6',                                    label: '(UTC+6) Dhaka / Bangladesh' },
+    { iana: 'Asia/Bangkok',         posix: '<+07>-7',                                    label: '(UTC+7) Bangkok / Tailandia' },
+    { iana: 'Asia/Shanghai',        posix: 'CST-8',                                      label: '(UTC+8) Shanghai / China' },
+    { iana: 'Asia/Singapore',       posix: '<+08>-8',                                    label: '(UTC+8) Singapur' },
+    { iana: 'Asia/Tokyo',           posix: 'JST-9',                                      label: '(UTC+9) Tokio / Japón' },
+    { iana: 'Asia/Seoul',           posix: 'KST-9',                                      label: '(UTC+9) Seúl / Corea' },
+    { iana: 'Australia/Sydney',     posix: 'AEST-10AEDT,M10.1.0,M4.1.0/3',               label: '(UTC+10) Sídney / Australia' },
+    { iana: 'Pacific/Auckland',     posix: 'NZST-12NZDT,M9.5.0,M4.1.0/3',                label: '(UTC+12) Auckland / Nueva Zelanda' },
+];
+
 const Devices = {
     devices: [],
     tokenTypes: [],
@@ -116,7 +166,10 @@ const Devices = {
                 active: d.active === true || d.active === 'TRUE' || d.active === 'true',
                 // Normalize time windows to HH:MM 24hr format
                 time_window_start: this.formatTime24(d.time_window_start, '08:00'),
-                time_window_end: this.formatTime24(d.time_window_end, '23:00')
+                time_window_end: this.formatTime24(d.time_window_end, '23:00'),
+                // Normalize timezone (default UTC)
+                timezone: d.timezone || 'Etc/UTC',
+                timezone_posix: d.timezone_posix || 'GMT0'
             }));
             this.renderDevices();
         } catch (error) {
@@ -371,6 +424,10 @@ const Devices = {
                         <span class="detail-value">${twStart} — ${twEnd} <span style="color:var(--text-secondary);font-size:0.85rem;">(${opTimeStr} hrs operación)</span></span>
                     </div>
                     <div class="detail-row">
+                        <span class="detail-label">🌐 Zona Horaria</span>
+                        <span class="detail-value">${Utils.escapeHtml((TIMEZONE_MAP.find(tz => tz.iana === device.timezone) || {}).label || device.timezone || 'UTC')}</span>
+                    </div>
+                    <div class="detail-row">
                         <span class="detail-label">Intervalo de Reconexión</span>
                         <span class="detail-value">${device.reconnect_sec || 30} segundos</span>
                     </div>
@@ -567,6 +624,12 @@ const Devices = {
                             <input type="time" id="new-device-tw-end" value="23:00">
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="new-device-timezone">🌐 Zona Horaria</label>
+                        <select id="new-device-timezone">
+                            ${TIMEZONE_MAP.map(tz => `<option value="${tz.iana}" ${tz.iana === 'Etc/UTC' ? 'selected' : ''}>${Utils.escapeHtml(tz.label)}</option>`).join('')}
+                        </select>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Crear Dispositivo</button>
@@ -590,6 +653,8 @@ const Devices = {
                 house_id: document.getElementById('new-device-house').value,
                 time_window_start: document.getElementById('new-device-tw-start').value || '08:00',
                 time_window_end: document.getElementById('new-device-tw-end').value || '23:00',
+                timezone: document.getElementById('new-device-timezone').value,
+                timezone_posix: (TIMEZONE_MAP.find(tz => tz.iana === document.getElementById('new-device-timezone').value) || {}).posix || 'GMT0',
                 active: true
             };
 
@@ -715,6 +780,12 @@ const Devices = {
                             <input type="time" id="edit-device-tw-end" value="${device.time_window_end || '23:00'}">
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="edit-device-timezone">${si('timezone', device.timezone)} 🌐 Zona Horaria</label>
+                        <select id="edit-device-timezone">
+                            ${TIMEZONE_MAP.map(tz => `<option value="${tz.iana}" ${tz.iana === (device.timezone || 'Etc/UTC') ? 'selected' : ''}>${Utils.escapeHtml(tz.label)}</option>`).join('')}
+                        </select>
+                    </div>
 
                     <!-- WiFi Network Picker (MASTER/ADMIN only) -->
                     <div style="border-top:1px solid var(--border-color);margin:16px 0;padding-top:16px;">
@@ -764,6 +835,8 @@ const Devices = {
                 wifi_ssid: document.getElementById('edit-device-ssid').value.trim(),
                 wifi_password: document.getElementById('edit-device-password').value.trim(),
                 house_id: document.getElementById('edit-device-house').value,
+                timezone: document.getElementById('edit-device-timezone').value,
+                timezone_posix: (TIMEZONE_MAP.find(tz => tz.iana === document.getElementById('edit-device-timezone').value) || {}).posix || 'GMT0',
                 time_window_start: document.getElementById('edit-device-tw-start').value || '08:00',
                 time_window_end: document.getElementById('edit-device-tw-end').value || '23:00'
             };
